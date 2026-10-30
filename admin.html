@@ -5,228 +5,240 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Manantial de Vida</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Leaflet CSS para el Mapa de Ubicación -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #080c14;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .navbar-custom {
+      background-color: #0f172a !important;
+      border-bottom: 2px solid #1e3a8a;
+    }
+
+    /* Animaciones suaves */
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-in-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tarjetas de Estadísticas (KPIs) */
+    .card-kpi {
+      background-color: #111827;
+      border: 1px solid #1f2937;
+      border-top: 4px solid #cbb281;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .card-kpi:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.15);
+    }
+
+    /* Tarjetas estilo Mercado Libre (Vista previa) */
+    .card-preview {
+      background-color: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .card-preview:hover {
+      border-color: #cbb281;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
+    }
+
+    /* Campos y Buscador */
+    .form-control, .form-select {
+      background-color: #0f172a;
+      border: 1px solid #374151;
+      color: #f8fafc;
+      border-radius: 8px;
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: #0f172a;
+      border-color: #cbb281;
+      color: #ffffff;
+      box-shadow: 0 0 0 0.25rem rgba(203, 178, 129, 0.25);
+    }
+
+    /* Botones temáticos */
+    .btn-kraft {
+      background-color: #cbb281;
+      color: #080c14;
+      font-weight: bold;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    .btn-kraft:hover {
+      background-color: #b39762;
+      color: #ffffff;
+    }
+
+    /* Mapa */
+    #mapaSanAndres {
+      height: 400px;
+      border-radius: 12px;
+      border: 1px solid #374151;
+    }
+  </style>
 </head>
 <body>
-  <!-- Proteger con Contraseña Básica de Entrada -->
-  <script>
-    if (sessionStorage.getItem('adminAuth') !== 'true') {
-      const pass = prompt('Área Privada. Ingrese la contraseña de Administración:');
-      if (pass === 'manantial2026') {
-        sessionStorage.setItem('adminAuth', 'true');
-      } else {
-        alert('Contraseña incorrecta.');
-        window.location.href = 'index.html';
-      }
-    }
-  </script>
 
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
-    <div class="container-fluid px-4">
-      <a class="navbar-brand fw-bold" href="#">⚙️ Admin Dashboard - Manantial de Vida</a>
-      <div class="navbar-nav ms-auto">
-        <a class="nav-link text-white fw-bold" href="index.html">Cerrar Sesión</a>
+  <!-- BARRA DE NAVEGACIÓN -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
+        <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
+        <span style="color: #cbb281; font-size: 1.1rem;">Manantial de Vida - Admin</span>
+      </a>
+      <div class="ms-auto d-flex gap-2">
+        <a class="btn btn-outline-light btn-sm px-3" href="index.html">Inicio</a>
+        <button id="btnCerrarSesion" class="btn btn-outline-danger btn-sm px-3">Cerrar Sesión</button>
       </div>
     </div>
   </nav>
 
-  <div class="container-fluid px-4 my-4 animate-fade">
-    
-    <!-- Alertas y Notificaciones -->
-    <div id="contenedorAlertas"></div>
+  <div class="container my-4 fade-in-up">
 
-    <!-- Menú Rápido y Métricas (Gráficas / Stats) -->
+    <!-- CONTENEDOR DE ALERTAS / NOTIFICACIONES -->
+    <div id="adminAlertas"></div>
+
+    <!-- TARJETAS KPI (ESTADÍSTICAS) -->
     <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0 bg-white">
-          <span class="text-muted small fw-bold">TOTAL REGISTRADOS</span>
-          <h2 class="fw-bold mb-0" id="statTotal" style="color: var(--primary-navy);">0</h2>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-muted text-uppercase fw-bold">Total Registrados</small>
+          <h2 id="kpiTotal" class="fw-bold text-white mt-2">0</h2>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0 bg-white">
-          <span class="text-muted small fw-bold">CONGREGANTES</span>
-          <h2 class="fw-bold mb-0 text-primary" id="statCongregantes">0</h2>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-muted text-uppercase fw-bold">Congregantes</small>
+          <h2 id="kpiCongregantes" class="fw-bold text-warning mt-2">0</h2>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0 bg-white">
-          <span class="text-muted small fw-bold">ADOLESCENTES</span>
-          <h2 class="fw-bold mb-0 text-info" id="statAdolescentes">0</h2>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-muted text-uppercase fw-bold">Jóvenes / Adolescentes</small>
+          <h2 id="kpiJovenes" class="fw-bold text-info mt-2">0</h2>
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="card p-3 shadow-sm border-0 bg-white">
-          <span class="text-muted small fw-bold">CUMPLEAÑOS MES</span>
-          <h2 class="fw-bold mb-0 text-warning" id="statCumpleMes">0</h2>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-muted text-uppercase fw-bold">Cumpleaños Mes</small>
+          <h2 id="kpiCumple" class="fw-bold text-success mt-2">0</h2>
         </div>
       </div>
     </div>
 
-    <!-- Barra de Búsqueda y Botones de Descarga -->
-    <div class="row g-2 mb-3 align-items-center">
-      <div class="col-md-6">
-        <input type="text" id="buscador" class="form-control form-control-lg border-2" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
+    <!-- MENÚ RÁPIDO Y BUSCADOR -->
+    <div class="row g-3 mb-4 align-items-center">
+      <div class="col-lg-6">
+        <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
       </div>
-      <div class="col-md-6 text-end">
-        <button class="btn btn-outline-success me-2" onclick="exportarExcel()">📊 Descargar Excel</button>
-        <button class="btn btn-outline-danger" onclick="window.print()">📄 Imprimir / PDF</button>
-      </div>
-    </div>
-
-    <!-- Tabla Princpal de Registros -->
-    <div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
-      <div class="card-header navbar-custom text-white fw-bold py-3">
-        📋 Base de Datos de Registros
-      </div>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>Foto</th>
-              <th>Nombre</th>
-              <th>Sección</th>
-              <th>Edad</th>
-              <th>Teléfono</th>
-              <th>Semáforo</th>
-              <th>WhatsApp Rápido</th>
-            </tr>
-          </thead>
-          <tbody id="tablaBody"></tbody>
-        </table>
+      <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end">
+        <button class="btn btn-kraft btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">🎂 Cumpleañeros</button>
+        <button class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAgenda">📅 Agenda y Visitas</button>
+        <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Descargar Excel</button>
+        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 Imprimir / PDF</button>
       </div>
     </div>
 
-    <!-- Mapa de San Andrés Tuxtla (Opcional) -->
-    <div class="card shadow border-0 rounded-4 p-3 mb-4">
-      <h5 class="fw-bold mb-3" style="color: var(--primary-navy);">🗺️ Mapa de Ubicación de Casas (San Andrés Tuxtla)</h5>
-      <div id="mapaSanAndres" style="height: 350px;" class="rounded-3"></div>
+    <!-- VISTA PREVIA (ESTILO MERCADO LIBRE: Tarjetas expandibles) -->
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-4">
+      <h4 class="fw-bold mb-3" style="color: #cbb281;">📋 Directorio de Congregantes (Vista Interactiva)</h4>
+      <div id="listaTarjetas" class="row g-3">
+        <!-- Las tarjetas dinámicas se cargan aquí desde Supabase -->
+      </div>
     </div>
+
+    <!-- MAPA DE UBICACIÓN DE CASAS (San Andrés Tuxtla) -->
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
+      <h4 class="fw-bold mb-3" style="color: #cbb281;">📍 Mapa de Ubicación de Casas (San Andrés Tuxtla)</h4>
+      <div id="mapaSanAndres"></div>
+    </div>
+
   </div>
 
-  <!-- Modal Detalle Extendido (Vista Mercado Libre) -->
-  <div class="modal fade" id="modalMercadoLibre" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content border-0 rounded-4">
-        <div class="modal-header navbar-custom text-white">
-          <h5 class="modal-title fw-bold">Ficha Completa del Integrante</h5>
+  <!-- MODAL DE DETALLE EXPANDIDO -->
+  <div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title" style="color: #cbb281;" id="modalNombreTitulo">Detalle del Registro</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body p-4" id="modalBodyML"></div>
+        <div class="modal-body" id="modalContenidoDetalle">
+          <!-- Contenido completo al dar clic -->
+        </div>
+        <div class="modal-footer border-secondary">
+          <a id="btnWhatsAppModal" href="#" target="_blank" class="btn btn-success btn-sm">💬 Enviar WhatsApp Rápido</a>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- MODAL DE CUMPLEAÑEROS -->
+  <div class="modal fade" id="modalCumpleanos" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title text-success">🎂 Cumpleañeros del Mes y Día</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="listaCumpleanosModal">
+          <p class="text-muted">Cargando cumpleañeros...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE AGENDA Y VISITAS -->
+  <div class="modal fade" id="modalAgenda" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title text-warning">📅 Agenda Pastoral y Visitas</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Añadir Evento / Visita Pastoral</label>
+            <input type="text" id="agendaTitulo" class="form-control mb-2" placeholder="Título (Ej. Visita familiar a Hno. Juan)">
+            <input type="datetime-local" id="agendaFecha" class="form-control mb-2">
+            <button id="btnGuardarAgenda" class="btn btn-kraft btn-sm w-100">Guardar en Agenda</button>
+          </div>
+          <hr class="border-secondary">
+          <h6 class="text-warning">Próximos Eventos y Visitas Programadas:</h6>
+          <div id="listaAgendaAdmin" class="list-group list-group-dark">
+            <!-- Agenda cargada dinámicamente -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-4 text-muted border-top border-secondary small mt-5" style="background-color: #04060a;">
+    <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz 🕊️</p>
+  </footer>
+
+  <!-- Scripts necesarios -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
-  <script>
-    let registrosCache = [];
-
-    async function initAdmin() {
-      const { data, error } = await _supabase.from('registros_iglesia').select('*').order('created_at', {ascending: false});
-      if(error) return;
-      registrosCache = data;
-
-      actualizarStats(data);
-      renderTabla(data);
-      initMapa();
-    }
-
-    function actualizarStats(data) {
-      document.getElementById('statTotal').innerText = data.length;
-      document.getElementById('statCongregantes').innerText = data.filter(r => r.seccion === 'congregante').length;
-      document.getElementById('statAdolescentes').innerText = data.filter(r => r.seccion === 'adolescente').length;
-      
-      const hoy = new Date();
-      const cumpleMes = data.filter(r => parseInt(r.fecha_nacimiento.split('-')[1]) === (hoy.getMonth() + 1));
-      document.getElementById('statCumpleMes').innerText = cumpleMes.length;
-
-      if(cumpleMes.length > 0) {
-        document.getElementById('contenedorAlertas').innerHTML = `
-          <div class="alert alert-warning alert-dismissible fade show rounded-3" role="alert">
-            <strong>🎉 ¡Notificación de Cumpleaños!</strong> Hay ${cumpleMes.length} integrante(s) cumpliendo años este mes. ¡Envíales un mensaje!
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-          </div>`;
-      }
-    }
-
-    function renderTabla(lista) {
-      const tbody = document.getElementById('tablaBody');
-      tbody.innerHTML = '';
-      lista.forEach(reg => {
-        let semClase = reg.estado_semaforo === 'verde' ? 'semaforo-verde' : reg.estado_semaforo === 'amarillo' ? 'semaforo-amarillo' : 'semaforo-rojo';
-        tbody.innerHTML += `
-          <tr onclick="abrirMercadoLibre('${reg.id}')" style="cursor: pointer;" class="ml-card-expand">
-            <td><img src="${reg.foto_url || 'https://via.placeholder.com/45'}" width="45" height="45" class="rounded-circle shadow-sm" style="object-fit:cover;"></td>
-            <td class="fw-bold">${reg.nombre_completo}</td>
-            <td><span class="badge ${reg.seccion === 'adolescente' ? 'bg-info text-dark' : 'bg-primary'}">${reg.seccion}</span></td>
-            <td>${reg.edad} yrs</td>
-            <td>${reg.telefono}</td>
-            <td text-center><span class="semaforo-dot ${semClase}" onclick="event.stopPropagation(); cambiarSemaforo('${reg.id}', '${reg.estado_semaforo}')"></span></td>
-            <td>
-              <a href="https://wa.me/52${reg.telefono}?text=Hola%20${encodeURIComponent(reg.nombre_completo)},%20te%20saludamos%20de%20Iglesia%20Manantial%20de%20Vida." target="_blank" onclick="event.stopPropagation();" class="btn btn-sm btn-success fw-bold">💬 WhatsApp</a>
-            </td>
-          </tr>`;
-      });
-    }
-
-    function abrirMercadoLibre(id) {
-      const reg = registrosCache.find(r => r.id === id);
-      if(!reg) return;
-      document.getElementById('modalBodyML').innerHTML = `
-        <div class="row align-items-center">
-          <div class="col-md-4 text-center">
-            <img src="${reg.foto_url || 'https://via.placeholder.com/200'}" class="img-fluid rounded-4 shadow mb-3" style="max-height: 220px; object-fit: cover;">
-          </div>
-          <div class="col-md-8">
-            <h3 class="fw-bold mb-1" style="color: var(--primary-navy);">${reg.nombre_completo}</h3>
-            <span class="badge bg-secondary mb-3">${reg.seccion.toUpperCase()}</span>
-            <p class="mb-1"><strong>Edad:</strong> ${reg.edad} años</p>
-            <p class="mb-1"><strong>Creyente:</strong> ${reg.creyente}</p>
-            <p class="mb-1"><strong>Dirección:</strong> ${reg.direccion}</p>
-            <p class="mb-1"><strong>Teléfono:</strong> ${reg.telefono}</p>
-            <p class="mb-3"><strong>Fecha Nacimiento:</strong> ${reg.fecha_nacimiento}</p>
-            <a href="https://wa.me/52${reg.telefono}?text=Hola%20${encodeURIComponent(reg.nombre_completo)},%20confirmamos%20tu%20agendación%20de%20visita." target="_blank" class="btn btn-success w-100 fw-bold py-2">Confirmar Agendación por WhatsApp</a>
-          </div>
-        </div>`;
-      new bootstrap.Modal(document.getElementById('modalMercadoLibre')).show();
-    }
-
-    async function cambiarSemaforo(id, actual) {
-      const nuevo = actual === 'verde' ? 'amarillo' : actual === 'amarillo' ? 'rojo' : 'verde';
-      await _supabase.from('registros_iglesia').update({ estado_semaforo: nuevo }).eq('id', id);
-      initAdmin();
-    }
-
-    document.getElementById('buscador').addEventListener('input', (e) => {
-      const q = e.target.value.toLowerCase();
-      const filtrados = registrosCache.filter(r => r.nombre_completo.toLowerCase().includes(q) || r.telefono.includes(q) || r.direccion.toLowerCase().includes(q));
-      renderTabla(filtrados);
-    });
-
-    function exportarExcel() {
-      let csv = 'Nombre,Seccion,Edad,Creyente,Direccion,Telefono,FechaNacimiento\n';
-      registrosCache.forEach(r => {
-        csv += `"${r.nombre_completo}","${r.seccion}",${r.edad},"${r.creyente}","${r.direccion}","${r.telefono}","${r.fecha_nacimiento}"\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'registros_manantial.csv';
-      a.click();
-    }
-
-    function initMapa() {
-      // Coordenadas centradas en San Andrés Tuxtla, Veracruz
-      const map = L.map('mapaSanAndres').setView([18.4489, -95.2133], 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-      L.marker([18.4489, -95.2133]).addTo(map).bindPopup('<b>Iglesia Manantial de Vida</b><br>Centro').openPopup();
-    }
-
-    initAdmin();
-  </script>
+  <!-- Librerías para Exportar Excel y PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Script principal con toda la lógica de Admin -->
+  <script src="admin.js"></script>
 </body>
 </html>
