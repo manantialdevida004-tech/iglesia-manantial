@@ -3,70 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iglesia Manantial de Vida - San Andrés Tuxtla</title>
+  <title>Iglesia Cristiana Manantial de Vida</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Estilos específicos y modernos para el Fondo Negro y Paleta del Logo */
     body {
-      background-color: #0b0f19;
+      background-color: #080c14;
       color: #f1f5f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
+
     .navbar-custom {
       background-color: #0f172a !important;
       border-bottom: 2px solid #1e3a8a;
     }
 
-    .hero-section {
-      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-      border-bottom: 3px solid #cbb281;
-      padding: 40px 0;
-    }
-
-    /* Animaciones suaves */
-    .fade-in-up {
-      animation: fadeInUp 0.8s ease-in-out;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Tarjetas estéticas oscuras */
-    .card-dark-custom {
+    .card-evento {
       background-color: #111827;
       border: 1px solid #1f2937;
-      border-left: 5px solid #cbb281;
-      color: #f9fafb;
+      border-radius: 12px;
+      overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .card-dark-custom:hover {
+    .card-evento:hover {
       transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(203, 178, 129, 0.15);
+      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
-
-    .carousel-item img {
-      height: 450px;
+    .card-evento img {
+      height: 200px;
       object-fit: cover;
-      filter: brightness(0.9);
+      width: 100%;
     }
 
-    .badge-kraft {
+    .carousel-custom img {
+      height: 420px;
+      object-fit: cover;
+    }
+
+    .section-title {
+      color: #cbb281;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .btn-registro {
       background-color: #cbb281;
-      color: #0b0f19;
+      color: #080c14;
       font-weight: bold;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+    .btn-registro:hover {
+      background-color: #b39762;
+      color: #ffffff;
     }
   </style>
 </head>
 <body>
 
-  <!-- BARRA DE NAVEGACIÓN CON LOGO -->
+  <!-- 1. ENCABEZADO / NAVBAR (Logo + Título + Menú) -->
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
-        <!-- AQUÍ PUEDES PONER TU LOGO: Sube tu logo a GitHub como 'logo.png' o cambia la ruta -->
-        <img src="logo.png" alt="Logo Manantial" width="45" height="45" class="rounded-circle me-2 border border-warning" onerror="this.style.display='none'">
+        <img src="logo.png" alt="Logo" width="45" height="45" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/45?text=Logo'">
         <span style="color: #cbb281;">Manantial de Vida</span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -74,151 +77,160 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <div class="navbar-nav ms-auto gap-2">
-          <a class="nav-link active text-warning fw-bold" href="index.html">Inicio</a>
-          <a class="nav-link" href="registro.html">Registro Congregantes</a>
-          <a class="nav-link" href="admin.html">Panel Admin</a>
-          <a class="nav-link" href="pastor.html">Zona Pastor</a>
+          <a class="btn btn-outline-warning btn-sm px-3" href="index.html">Inicio</a>
+          <a class="btn btn-outline-light btn-sm px-3" href="registro.html">Registro</a>
+          <a class="btn btn-outline-light btn-sm px-3" href="admin.html">Admin</a>
+          <a class="btn btn-outline-light btn-sm px-3" href="pastor.html">Pastor</a>
         </div>
       </div>
     </div>
   </nav>
 
-  <!-- SECCIÓN HERO CON LOGO GRANDE Y BIENVENIDA -->
-  <header class="hero-section text-center fade-in-up">
-    <div class="container">
-      <h1 class="display-5 fw-bold mb-2" style="color: #f8fafc;">Iglesia Cristiana <span style="color: #cbb281;">Manantial de Vida</span></h1>
-      <p class="lead text-muted mb-4">San Andrés Tuxtla, Veracruz 🕊️ • Un lugar de paz y avivamiento</p>
-    </div>
-  </header>
+  <!-- 2. TÍTULO PRINCIPAL -->
+  <div class="container text-center my-4">
+    <h1 class="fw-bold display-5" style="color: #ffffff;">Iglesia Cristiana <span style="color: #cbb281;">Manantial de Vida</span></h1>
+  </div>
 
-  <!-- CARRUSEL DE IMÁGENES (Personalizable) -->
-  <div class="container my-5 fade-in-up">
-    <div class="text-center mb-4">
-      <h3 class="fw-bold" style="color: #cbb281;">📸 Galería de Actividades y Eventos</h3>
-      <p class="text-muted small">Coloca tus imágenes favoritas en tu repositorio de GitHub con nombres sencillos (ej: `evento1.jpg`, `evento2.jpg`, `evento3.jpg`) y cámbialas abajo.</p>
-    </div>
-
-    <div id="churchCarousel" class="carousel slide shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
+  <!-- 3. CARRUSEL 1 (Actividades y Eventos) -->
+  <div class="container mb-5">
+    <h3 class="section-title">Actividades y Eventos</h3>
+    <div id="carruselUno" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
       <div class="carousel-indicators">
-        <button type="button" data-bs-target="#churchCarousel" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#churchCarousel" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#churchCarousel" data-bs-slide-to="2"></button>
+        <button type="button" data-bs-target="#carruselUno" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#carruselUno" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#carruselUno" data-bs-slide-to="2"></button>
       </div>
       <div class="carousel-inner">
-        <!-- IMAGEN 1 (Puedes cambiar la URL por el nombre de tu foto en GitHub, ej: src="evento1.jpg") -->
         <div class="carousel-item active">
-          <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Evento 1">
-          <div class="carousel-caption bg-dark bg-opacity-75 rounded-3 p-3 mb-2">
-            <h5 class="text-warning fw-bold">Gran Vigilia Juvenil</h5>
-            <p class="mb-0">Buscando la presencia de Dios unidos como congregación.</p>
-          </div>
+          <img src="https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Actividad 1">
         </div>
-        <!-- IMAGEN 2 -->
         <div class="carousel-item">
-          <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Evento 2">
-          <div class="carousel-caption bg-dark bg-opacity-75 rounded-3 p-3 mb-2">
-            <h5 class="text-warning fw-bold">Escuela Dominical y Familiar</h5>
-            <p class="mb-0">Creciendo y aprendiendo juntos bajo la palabra.</p>
-          </div>
+          <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Actividad 2">
         </div>
-        <!-- IMAGEN 3 -->
         <div class="carousel-item">
-          <img src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Evento 3">
-          <div class="carousel-caption bg-dark bg-opacity-75 rounded-3 p-3 mb-2">
-            <h5 class="text-warning fw-bold">Campañas de Alcance Social</h5>
-            <p class="mb-0">Llevando esperanza a cada rincón de San Andrés Tuxtla.</p>
-          </div>
+          <img src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Actividad 3">
         </div>
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#churchCarousel" data-bs-slide="prev">
+      <button class="carousel-control-prev" type="button" data-bs-target="#carruselUno" data-bs-slide="prev">
         <span class="carousel-control-prev-icon"></span>
       </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#churchCarousel" data-bs-slide="next">
+      <button class="carousel-control-next" type="button" data-bs-target="#carruselUno" data-bs-slide="next">
         <span class="carousel-control-next-icon"></span>
       </button>
     </div>
   </div>
 
-  <!-- ZONA DE EVENTOS Y CUMPLEAÑEROS -->
-  <div class="container my-5 fade-in-up">
-    <div class="row g-4">
-      <!-- Columna Izquierda: Eventos Próximos y Pasados -->
-      <div class="col-lg-8">
-        <h3 class="fw-bold mb-4" style="color: #cbb281;">📅 Próximos y Pasados Eventos</h3>
-        
-        <div class="card card-dark-custom p-4 mb-3">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="fw-bold mb-0 text-white">Culto General de Celebración</h5>
-            <span class="badge badge-kraft">Próximo Domingo</span>
+  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS (4 Tarjetas distribuidas en 2 filas) -->
+  <div class="container mb-5">
+    <h3 class="section-title">Próximos Eventos</h3>
+    
+    <!-- Fila 1 -->
+    <div class="row g-4 mb-4">
+      <div class="col-md-6">
+        <div class="card-evento">
+          <img src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=800&q=80" alt="Culto General">
+          <div class="p-3 text-center">
+            <h5 class="fw-bold text-white mb-1">Culto General</h5>
+            <p class="text-warning mb-0">10:30 AM • Próximo Domingo</p>
           </div>
-          <p class="text-muted small mb-2">🕒 10:00 AM • Templo Principal Manantial de Vida</p>
-          <p class="mb-0 text-secondary">Ven preparado para recibir una palabra fresca y adorar al Señor en familia.</p>
-        </div>
-
-        <div class="card card-dark-custom p-4 mb-3" style="border-left-color: #6b7280;">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="fw-bold mb-0 text-white">Vigilia de Oración Intercesora</h5>
-            <span class="badge bg-secondary">Evento Pasado</span>
-          </div>
-          <p class="text-muted small mb-2">🕒 Viernes pasado • 9:00 PM</p>
-          <p class="mb-0 text-secondary">Agradecemos a todos los hermanos que se quedaron intercediendo por nuestra ciudad.</p>
         </div>
       </div>
+      <div class="col-md-6">
+        <div class="card-evento">
+          <img src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=800&q=80" alt="Culto de Jóvenes">
+          <div class="p-3 text-center">
+            <h5 class="fw-bold text-white mb-1">Culto de Jóvenes</h5>
+            <p class="text-warning mb-0">5:00 PM • Próximo Domingo</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <!-- Columna Derecha: Cumpleañeros del Día y del Mes -->
-      <div class="col-lg-4">
-        <div class="card card-dark-custom p-4 rounded-4 shadow">
-          <h4 class="fw-bold text-center mb-3" style="color: #cbb281;">🎂 Cumpleaños del Mes</h4>
-          <p class="text-center text-muted small">Información conectada automáticamente desde el formulario de la base de datos.</p>
-          <hr class="border-secondary">
-          <ul class="list-group list-group-flush bg-transparent" id="listaCumpleIndex">
-            <li class="list-group-item bg-transparent text-light text-center">Cargando felicitaciones...</li>
-          </ul>
+    <!-- Fila 2 -->
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="card-evento">
+          <img src="https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80" alt="Martes de Oración">
+          <div class="p-3 text-center">
+            <h5 class="fw-bold text-white mb-1">Martes de Oración</h5>
+            <p class="text-warning mb-0">7:00 PM • Próximo Martes</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card-evento">
+          <img src="https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=800&q=80" alt="Clases de Niños">
+          <div class="p-3 text-center">
+            <h5 class="fw-bold text-white mb-1">Clases de Niños</h5>
+            <p class="text-warning mb-0">5:00 PM • Próximo Sábado</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PIE DE PÁGINA -->
-  <footer class="text-center py-4 text-muted border-top border-secondary mt-5" style="background-color: #06090f;">
-    <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz. Desarrollado con propósito 🕊️</p>
+  <!-- 6. SECCIÓN REGISTRO (Imagen + Descripción + Botón "Ir al registro") -->
+  <div class="container mb-5">
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
+      <div class="row align-items-center g-4">
+        <div class="col-md-5">
+          <img src="https://images.unsplash.com/photo-1455849318743-b2233052fcff?auto=format&fit=crop&w=800&q=80" class="img-fluid rounded-3 border border-secondary" alt="Formulario de Registro">
+        </div>
+        <div class="col-md-7">
+          <h3 class="fw-bold" style="color: #cbb281;">Registro de Congregantes</h3>
+          <p class="text-secondary fs-5">
+            Mantén tus datos actualizados para formar parte activa de las actividades, visitas pastorales y eventos especiales de nuestra congregación.
+          </p>
+          <a href="registro.html" class="btn-registro mt-2">Ir al Registro ➔</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. CARRUSEL 2 (Actividades y Eventos Adicionales) -->
+  <div class="container mb-5">
+    <h3 class="section-title">Galería de Actividades y Eventos</h3>
+    <div id="carruselDos" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#carruselDos" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#carruselDos" data-bs-slide-to="1"></button>
+      </div>
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Galería 1">
+        </div>
+        <div class="carousel-item">
+          <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Galería 2">
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carruselDos" data-bs-slide-to="prev">
+        <span class="carousel-control-prev-icon"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carruselDos" data-bs-slide-to="next">
+        <span class="carousel-control-next-icon"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 8. SECCIÓN UBICACIÓN DE LA IGLESIA (Mapa) -->
+  <div class="container mb-5">
+    <h3 class="section-title">Ubicación de la Iglesia</h3>
+    <div class="rounded-4 overflow-hidden border border-secondary shadow-lg">
+      <iframe 
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3783.504265416047!2d-95.2155!3d18.4489!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTjCsDI2JzU2LjAiTiA5NcKwMTInNTUuOCJX!5e0!3m2!1ses!2smx!4v1620000000000!5m2!1ses!2smx" 
+        width="100%" 
+        height="380" 
+        style="border:0;" 
+        allowfullscreen="" 
+        loading="lazy">
+      </iframe>
+    </div>
+  </div>
+
+  <footer class="text-center py-4 text-muted border-top border-secondary" style="background-color: #04060a;">
+    <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz 🕊️</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="app.js"></script>
-  <script>
-    // Carga dinámica de cumpleañeros desde Supabase
-    async function cargarCumpleaniosIndex() {
-      const { data } = await _supabase.from('registros_iglesia').select('nombre_completo, fecha_nacimiento');
-      const ul = document.getElementById('listaCumpleIndex');
-      if(!data || data.length === 0) {
-        ul.innerHTML = '<li class="list-group-item bg-transparent text-muted text-center">Aún no hay registros en la base de datos</li>';
-        return;
-      }
-      const hoy = new Date();
-      const mesActual = hoy.getMonth() + 1;
-
-      ul.innerHTML = '';
-      let encontrados = 0;
-      data.forEach(r => {
-        if(!r.fecha_nacimiento) return;
-        const [año, mes, dia] = r.fecha_nacimiento.split('-');
-        if(parseInt(mes) === mesActual) {
-          encontrados++;
-          const esHoy = (parseInt(dia) === hoy.getDate());
-          ul.innerHTML += `
-            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center text-light border-secondary">
-              <span>🎉 ${r.nombre_completo}</span>
-              <span class="badge ${esHoy ? 'bg-danger' : 'badge-kraft'} rounded-pill">${dia}/${mes} ${esHoy ? '¡HOY! 🎂' : ''}</span>
-            </li>`;
-        }
-      });
-      if(encontrados === 0) {
-        ul.innerHTML = '<li class="list-group-item bg-transparent text-muted text-center">Ningún cumpleaños registrado este mes</li>';
-      }
-    }
-    cargarCumpleaniosIndex();
-  </script>
 </body>
 </html>
