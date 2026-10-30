@@ -11,6 +11,7 @@
       background-color: #080c14;
       color: #f1f5f9;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
     }
 
     .navbar-custom {
@@ -18,26 +19,35 @@
       border-bottom: 2px solid #1e3a8a;
     }
 
+    /* Tarjetas de Próximos Eventos */
     .card-evento {
       background-color: #111827;
       border: 1px solid #1f2937;
       border-radius: 12px;
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      height: 100%;
     }
     .card-evento:hover {
       transform: translateY(-5px);
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
     .card-evento img {
-      height: 280px;
+      height: 220px;
       object-fit: cover;
       width: 100%;
     }
 
+    /* Carruseles responsivos y estéticos para celular */
     .carousel-custom img {
-      height: 450px;
+      height: 320px;
       object-fit: cover;
+      width: 100%;
+    }
+    @media (min-width: 768px) {
+      .carousel-custom img {
+        height: 450px;
+      }
     }
 
     .section-title {
@@ -65,18 +75,18 @@
 </head>
 <body>
 
-  <!-- 1. ENCABEZADO / NAVBAR -->
+  <!-- 1. ENCABEZADO / NAVBAR RESPONSIVO -->
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
-        <img src="logo.png" alt="Logo" width="45" height="45" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/45?text=Logo'">
-        <span style="color: #cbb281;">Manantial de Vida</span>
+        <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
+        <span style="color: #cbb281; font-size: 1.1rem;">Manantial de Vida</span>
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <button class="navbar-toggler border-0 text-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <div class="navbar-nav ms-auto gap-2">
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <div class="navbar-nav gap-2 mt-2 mt-lg-0">
           <a class="btn btn-outline-warning btn-sm px-3" href="index.html">Inicio</a>
           <a class="btn btn-outline-light btn-sm px-3" href="registro.html">Registro</a>
           <a class="btn btn-outline-light btn-sm px-3" href="admin.html">Admin</a>
@@ -88,12 +98,12 @@
 
   <!-- 2. TÍTULO PRINCIPAL -->
   <div class="container text-center my-4">
-    <h1 class="fw-bold display-5" style="color: #ffffff;">Iglesia Cristiana <span style="color: #cbb281;">Manantial de Vida</span></h1>
+    <h1 class="fw-bold fs-3 fs-md-2" style="color: #ffffff;">Iglesia Cristiana <span style="color: #cbb281;">Manantial de Vida</span></h1>
   </div>
 
-  <!-- 3. CARRUSEL 1 (Carpeta carrusel1) -->
+  <!-- 3. CARRUSEL 1 (Actividades y Eventos) -->
   <div class="container mb-5">
-    <h3 class="section-title">Actividades y Eventos</h3>
+    <h3 class="section-title fs-4">Actividades y Eventos</h3>
     <div id="carruselUno" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
       <div class="carousel-indicators">
         <button type="button" data-bs-target="#carruselUno" data-bs-slide-to="0" class="active"></button>
@@ -120,17 +130,17 @@
     </div>
   </div>
 
-  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS (Carpeta eventos/) -->
+  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS (4 Tarjetas adaptables) -->
   <div class="container mb-5">
-    <h3 class="section-title">Próximos Eventos</h3>
+    <h3 class="section-title fs-4">Próximos Eventos</h3>
     
     <div class="row g-4 mb-4">
       <div class="col-md-6 col-12">
         <div class="card-evento">
           <img src="eventos/culto_general.jpeg" alt="Culto General" class="img-fluid" onerror="this.src='eventos/culto_general.jpg'">
           <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1">Culto General</h5>
-            <p class="text-warning mb-0">10:30 AM • Próximo Domingo</p>
+            <h5 class="fw-bold text-white mb-1 fs-5">Culto General</h5>
+            <p class="text-warning mb-0 small">10:30 AM • Próximo Domingo</p>
           </div>
         </div>
       </div>
@@ -138,8 +148,8 @@
         <div class="card-evento">
           <img src="eventos/jovenes.jpeg" alt="Culto de Jóvenes" class="img-fluid" onerror="this.src='eventos/jovenes.jpg'">
           <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1">Culto de Jóvenes</h5>
-            <p class="text-warning mb-0">5:00 PM • Próximo Domingo</p>
+            <h5 class="fw-bold text-white mb-1 fs-5">Culto de Jóvenes</h5>
+            <p class="text-warning mb-0 small">5:00 PM • Próximo Domingo</p>
           </div>
         </div>
       </div>
@@ -150,8 +160,8 @@
         <div class="card-evento">
           <img src="eventos/reunion_oracion.jpeg" alt="Martes de Oración" class="img-fluid" onerror="this.src='eventos/reunion_oracion.jpg'">
           <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1">Martes de Oración</h5>
-            <p class="text-warning mb-0">7:00 PM • Próximo Martes</p>
+            <h5 class="fw-bold text-white mb-1 fs-5">Martes de Oración</h5>
+            <p class="text-warning mb-0 small">7:00 PM • Próximo Martes</p>
           </div>
         </div>
       </div>
@@ -159,8 +169,8 @@
         <div class="card-evento">
           <img src="eventos/ninos.jpeg" alt="Clases de Niños" class="img-fluid" onerror="this.src='eventos/ninos.jpg'">
           <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1">Clases de Niños</h5>
-            <p class="text-warning mb-0">5:00 PM • Próximo Sábado</p>
+            <h5 class="fw-bold text-white mb-1 fs-5">Clases de Niños</h5>
+            <p class="text-warning mb-0 small">5:00 PM • Próximo Sábado</p>
           </div>
         </div>
       </div>
@@ -172,11 +182,11 @@
     <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
       <div class="row align-items-center g-4">
         <div class="col-md-5 col-12 text-center">
-          <img src="https://images.unsplash.com/photo-1455849318743-b2233052fcff?auto=format&fit=crop&w=800&q=80" class="img-fluid rounded-3 border border-secondary" alt="Formulario de Registro">
+          <img src="https://images.unsplash.com/photo-1455849318743-b2233052fcff?auto=format&fit=crop&w=800&q=80" class="img-fluid rounded-3 border border-secondary" alt="Formulario de Registro" style="max-height: 200px; object-fit: cover;">
         </div>
-        <div class="col-md-7 col-12">
-          <h3 class="fw-bold" style="color: #cbb281;">Registro de Congregantes</h3>
-          <p class="text-secondary fs-5">
+        <div class="col-md-7 col-12 text-center text-md-start">
+          <h3 class="fw-bold fs-4" style="color: #cbb281;">Registro de Congregantes</h3>
+          <p class="text-secondary small">
             Mantén tus datos actualizados para formar parte activa de las actividades, visitas pastorales y eventos especiales de nuestra congregación.
           </p>
           <a href="registro.html" class="btn-registro mt-2">Ir al Registro ➔</a>
@@ -185,9 +195,9 @@
     </div>
   </div>
 
-  <!-- 7. CARRUSEL 2 (Carpeta actividades/) -->
+  <!-- 7. CARRUSEL 2 (Galería de Actividades) -->
   <div class="container mb-5">
-    <h3 class="section-title">Galería de Actividades y Eventos</h3>
+    <h3 class="section-title fs-4">Galería de Actividades y Eventos</h3>
     <div id="carruselDos" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
       <div class="carousel-indicators">
         <button type="button" data-bs-target="#carruselDos" data-bs-slide-to="0" class="active"></button>
@@ -214,11 +224,11 @@
     </div>
   </div>
 
-  <!-- 8. SECCIÓN UBICACIÓN DE LA IGLESIA (Ajustada exactamente al pin de la etiqueta "Manantial de vida") -->
+  <!-- 8. SECCIÓN UBICACIÓN DE LA IGLESIA -->
   <div class="container mb-5">
-    <h3 class="section-title">Ubicación de la Iglesia</h3>
-    <p class="text-center text-muted mb-3">📍 Primera Octavio Pérez González 1, El Cebollal, 95729 San Andrés Tuxtla, Ver.</p>
-    <div class="rounded-4 overflow-hidden border border-secondary shadow-lg ratio ratio-16x9" style="max-height: 450px;">
+    <h3 class="section-title fs-4">Ubicación de la Iglesia</h3>
+    <p class="text-center text-muted small mb-3">📍 Primera Octavio Pérez González 1, El Cebollal, 95729 San Andrés Tuxtla, Ver.</p>
+    <div class="rounded-4 overflow-hidden border border-secondary shadow-lg ratio ratio-16x9">
       <iframe 
         src="https://maps.google.com/maps?q=Manantial+de+vida,+San+Andr%C3%A9s+Tuxtla,+Ver.&t=&z=19&ie=UTF8&iwloc=&output=embed" 
         width="100%" 
@@ -230,7 +240,7 @@
     </div>
   </div>
 
-  <footer class="text-center py-4 text-muted border-top border-secondary" style="background-color: #04060a;">
+  <footer class="text-center py-4 text-muted border-top border-secondary small" style="background-color: #04060a;">
     <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz 🕊️</p>
   </footer>
 
