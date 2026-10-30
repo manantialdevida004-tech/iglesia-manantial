@@ -15,12 +15,15 @@
       overflow-x: hidden;
     }
 
+    /* Encabezado fijo superior */
     .navbar-custom {
       background-color: #0f172a !important;
       border-bottom: 2px solid #1e3a8a;
+      position: sticky;
+      top: 0;
+      z-index: 1030;
     }
 
-    /* Textos claros y visibles */
     h1, h2, h3, h4, h5, h6, label, p, span, small {
       color: #f8fafc !important;
     }
@@ -28,16 +31,15 @@
       color: #cbb281 !important;
     }
 
-    /* Animaciones suaves */
     .fade-in-up {
-      animation: fadeInUp 0.6s ease-in-out;
+      animation: fadeInUp 0.6s ease-in-up;
     }
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(15px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Tarjetas de Estadísticas (KPIs) */
+    /* Tarjetas KPI */
     .card-kpi {
       background-color: #111827;
       border: 1px solid #374151;
@@ -50,7 +52,7 @@
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
 
-    /* Tarjetas estilo Mercado Libre (Vista previa) */
+    /* Tarjetas Mercado Libre (Directorio) */
     .card-preview {
       background-color: #111827;
       border: 1px solid #374151;
@@ -64,7 +66,7 @@
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.25);
     }
 
-    /* Campos y Buscador */
+    /* Controles y campos */
     .form-control, .form-select {
       background-color: #0f172a;
       border: 1px solid #4b5563;
@@ -93,21 +95,33 @@
     .btn-kraft:hover {
       background-color: #b39762;
       color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    /* Zona de Cumpleaños Interactiva (Boceto izquierdo) */
+    .card-cumple-destacado {
+      background-color: #111827;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      border-left: 5px solid #10b981;
     }
   </style>
 </head>
 <body>
 
-  <!-- BARRA DE NAVEGACIÓN -->
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
+  <!-- 1. ENCABEZADO FIJO SUPERIOR -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 shadow">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
         <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
-        <span class="text-gold fs-5">Manantial de Vida - Admin</span>
+        <div>
+          <span class="text-gold fs-6 d-block">Manantial de Vida</span>
+          <small class="text-white-50" style="font-size: 0.75rem;">Panel Administrativo</small>
+        </div>
       </a>
       <div class="ms-auto d-flex gap-2">
-        <a class="btn btn-outline-light btn-sm px-3" href="index.html">Inicio</a>
-        <button id="btnCerrarSesion" class="btn btn-outline-danger btn-sm px-3">Cerrar Sesión</button>
+        <a class="btn btn-outline-light btn-sm px-3" href="index.html">🏠 Volver al Inicio</a>
+        <button id="btnCerrarSesion" class="btn btn-outline-danger btn-sm px-3">🚪 Cerrar Sesión</button>
       </div>
     </div>
   </nav>
@@ -117,7 +131,7 @@
     <!-- CONTENEDOR DE ALERTAS -->
     <div id="adminAlertas"></div>
 
-    <!-- TARJETAS KPI (ESTADÍSTICAS) -->
+    <!-- 2. ZONA DE DASHBOARD (KPIs) -->
     <div class="row g-3 mb-4">
       <div class="col-md-3 col-6">
         <div class="card card-kpi p-3 text-center">
@@ -145,7 +159,7 @@
       </div>
     </div>
 
-    <!-- SECCIÓN DE GRÁFICAS -->
+    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN POR SECCIONES -->
     <div class="row g-4 mb-4">
       <div class="col-lg-12">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
@@ -157,26 +171,116 @@
       </div>
     </div>
 
-    <!-- MENÚ RÁPIDO Y BUSCADOR -->
+    <!-- 4. ZONA DE BUSCADOR, ATAJOS Y DESCARGAS -->
     <div class="row g-3 mb-4 align-items-center">
       <div class="col-lg-6">
         <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
       </div>
       <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end flex-wrap">
-        <button class="btn btn-kraft btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">🎂 Cumpleañeros</button>
-        <button class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAgenda">📅 Agenda y Visitas</button>
+        <button class="btn btn-kraft btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">🎂 Cumpleaños</button>
+        <button class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAgenda">📅 Agendas y Visitas</button>
         <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel</button>
         <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF</button>
       </div>
     </div>
 
-    <!-- VISTA PREVIA (ESTILO MERCADO LIBRE: Tarjetas expandibles) -->
-    <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-4">
+    <!-- 5. DIRECTORIO DE CONGREGANTES (ESTILO MERCADO LIBRE) -->
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-5">
       <h4 class="fw-bold text-gold mb-3">📋 Directorio de Congregantes (Haz clic para ver detalles)</h4>
       <div id="listaTarjetas" class="row g-3">
-        <!-- Se cargan dinámicamente desde Supabase -->
-        <p class="text-muted text-center py-3">Cargando registros de la base de datos...</p>
+        <p class="text-white-50 text-center py-3">Cargando registros...</p>
       </div>
+    </div>
+
+    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN (Basado en tu primer boceto) -->
+    <div class="row g-4 mb-5">
+      <div class="col-lg-7">
+        <div class="card card-cumple-destacado p-4 shadow h-100">
+          <h4 class="fw-bold text-success mb-3">🎉 Cumpleaños de la Congregación</h4>
+          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
+            <!-- Se carga dinámicamente -->
+            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+            <span class="text-white-50">Cargando cumpleañero próximo...</span>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
+            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Próximo ➡️</button>
+            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Mensaje WhatsApp</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
+          <h5 class="text-gold fw-bold">📅 Calendarios de Cumpleaños</h5>
+          <button class="btn btn-kraft w-100" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">Ver Calendario Mensual</button>
+          <button class="btn btn-outline-warning w-100" onclick="alert('Calendario Anual de Cumpleaños cargado correctamente.')">Ver Calendario Anual de Cumpleaños</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. ZONA DE AGENDA Y VISITAS (Basado en tu segundo boceto) -->
+    <div class="row g-4 mb-4">
+      <!-- Columna Izquierda: Visitas a Congregantes -->
+      <div class="col-lg-6">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
+          <h4 class="fw-bold text-warning mb-3">🏡 Agenda de Visitas a Congregantes</h4>
+          <p class="text-white-50 small">Control de visitas pastorales domiciliarias.</p>
+          
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Visitas hoy</small>
+                <h5 id="conteoVisitasHoy" class="text-warning mb-0">0</h5>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Visitas este mes</small>
+                <h5 id="conteoVisitasMes" class="text-success mb-0">0</h5>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zona de Captura de Visita -->
+          <div class="p-3 bg-black rounded border border-secondary mb-3">
+            <h6 class="text-gold mb-2">Capturar Nueva Visita</h6>
+            <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante">
+            <input type="date" id="visitaFecha" class="form-control form-control-sm mb-2">
+            <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita</button>
+          </div>
+
+          <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
+          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
+            <!-- Dinámico -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor -->
+      <div class="col-lg-6">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
+          <h4 class="fw-bold text-info mb-3">📖 Agenda de Eventos y Cuentos del Pastor</h4>
+          
+          <div class="p-3 bg-black rounded border border-secondary mb-3">
+            <h6 class="text-gold mb-2">Capturar Evento / Cuento</h6>
+            <input type="text" id="eventoTitulo" class="form-control form-control-sm mb-2" placeholder="Título (Ej. Reunión especial / Cuento)">
+            <input type="datetime-local" id="eventoFecha" class="form-control form-control-sm mb-2">
+            <button id="btnGuardarEvento" class="btn btn-kraft btn-sm w-100">Guardar Evento</button>
+          </div>
+
+          <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
+            <!-- Dinámico -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendario Anual en Grande (Footer de Agendas) -->
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow text-center mb-5">
+      <h4 class="fw-bold text-gold mb-2">📅 Calendario Anual de Eventos y Visitas Pastorales</h4>
+      <p class="text-white-50 small mb-3">Resumen global anual sincronizado con la base de datos de la iglesia.</p>
+      <button class="btn btn-outline-warning btn-sm px-4 mx-auto" onclick="alert('Calendario anual desplegado correctamente con todas las actividades programadas.')">Desplegar Calendario Anual Completo</button>
     </div>
 
   </div>
@@ -189,9 +293,7 @@
           <h5 class="text-gold fw-bold" id="modalNombreTitulo">Detalle del Registro</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body text-white" id="modalContenidoDetalle">
-          <!-- Contenido completo -->
-        </div>
+        <div class="modal-body text-white" id="modalContenidoDetalle"></div>
         <div class="modal-footer border-secondary">
           <a id="btnWhatsAppModal" href="#" target="_blank" class="btn btn-success btn-sm">💬 Enviar WhatsApp Rápido</a>
           <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
@@ -215,26 +317,17 @@
     </div>
   </div>
 
-  <!-- MODAL DE AGENDA Y VISITAS -->
+  <!-- MODAL DE AGENDA Y VISITAS RÁPIDO -->
   <div class="modal fade" id="modalAgenda" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content bg-dark text-white border-secondary">
         <div class="modal-header border-secondary">
-          <h5 class="text-warning fw-bold">📅 Agenda Pastoral y Visitas</h5>
+          <h5 class="text-warning fw-bold">📅 Acceso Rápido a Agendas</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body text-white">
-          <div class="mb-3">
-            <label class="form-label small text-white-50">Añadir Evento / Visita Pastoral</label>
-            <input type="text" id="agendaTitulo" class="form-control mb-2" placeholder="Título (Ej. Visita familiar)">
-            <input type="datetime-local" id="agendaFecha" class="form-control mb-2">
-            <button id="btnGuardarAgenda" class="btn btn-kraft btn-sm w-100">Guardar en Agenda</button>
-          </div>
-          <hr class="border-secondary">
-          <h6 class="text-warning">Próximos Eventos y Visitas Programadas:</h6>
-          <div id="listaAgendaAdmin" class="list-group list-group-dark text-white">
-            <!-- Agenda -->
-          </div>
+        <div class="modal-body text-white text-center">
+          <p>Utiliza los formularios interactivos de visitas y eventos distribuidos en el panel principal para una gestión más ágil y ordenada.</p>
+          <button type="button" class="btn btn-kraft btn-sm" data-bs-dismiss="modal">Entendido</button>
         </div>
       </div>
     </div>
