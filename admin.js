@@ -7,7 +7,7 @@ let miGrafica = null;
 document.addEventListener("DOMContentLoaded", () => {
   // Validar sesión de admin
   if (localStorage.getItem("adminLogueado") !== "true") {
-    window.location.href = "admin-login.html"; // O redirige si es necesario
+    window.location.href = "admin-login.html";
   }
 
   const btnCerrar = document.getElementById("btnCerrarSesion");
@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     inputBuscador.addEventListener("input", (e) => {
       const texto = e.target.value.toLowerCase();
       const filtrados = registrosGlobales.filter(r => 
-        (r.Nombre_completo && r.Nombre_completo.toLowerCase().includes(texto)) ||
+        (r.nombre_completo && r.nombre_completo.toLowerCase().includes(texto)) ||
         (r.telefono && r.telefono.toLowerCase().includes(texto)) ||
         (r.direccion && r.direccion.toLowerCase().includes(texto))
       );
@@ -90,9 +90,8 @@ async function cargarRegistrosAdmin() {
 function actualizarKPIs(data) {
   const total = data.length;
   const congregantes = data.filter(r => r.seccion === "Congregantes / Adultos").length;
-  const jovenesNinos = data.filter(r => r.seccion === "Jóvenes" || r.seccion === "Niños").length;
+  const jovenesNinos = data.filter(r => r.seccion === "Jóvenes" || r.seccion === "Niños" || r.seccion === "adolescente").length;
   
-  // Mes actual
   const mesActual = new Date().getMonth() + 1;
   const cumpleMes = data.filter(r => {
     if (!r.fecha_nacimiento) return false;
@@ -117,12 +116,11 @@ function renderizarTarjetas(data) {
 
   let html = "";
   data.forEach((reg, index) => {
-    const foto = reg.foto_url || "https://via.placeholder.com/150?text=Sin+Foto";
-    const nombre = reg.Nombre_completo || "Sin Nombre";
+    const foto = reg.foto_url && reg.foto_url.trim() !== "" ? reg.foto_url : "https://via.placeholder.com/150?text=Sin+Foto";
+    const nombre = reg.nombre_completo || "Sin Nombre";
     const edad = reg.edad || "N/D";
     const seccion = reg.seccion || "General";
-    const telefono = reg.telefono || "";
-    const semaforoColor = index % 2 === 0 ? "bg-success" : "bg-warning"; // Ejemplo de semáforo
+    const semaforoColor = index % 2 === 0 ? "bg-success" : "bg-warning";
 
     html += `
       <div class="col-md-4 col-sm-6">
@@ -143,16 +141,19 @@ function renderizarTarjetas(data) {
 }
 
 function mostrarDetalle(reg) {
-  document.getElementById("modalNombreTitulo").textContent = reg.Nombre_completo || "Detalle del Congregante";
+  const nombre = reg.nombre_completo || "Detalle del Congregante";
+  document.getElementById("modalNombreTitulo").textContent = nombre;
   
+  const foto = reg.foto_url && reg.foto_url.trim() !== "" ? reg.foto_url : "https://via.placeholder.com/120?text=Sin+Foto";
+
   const contenido = document.getElementById("modalContenidoDetalle");
   contenido.innerHTML = `
     <div class="text-center mb-3">
-      <img src="${reg.foto_url || 'https://via.placeholder.com/120'}" class="rounded-circle border border-warning mb-2" width="100" height="100" style="object-fit: cover;">
+      <img src="${foto}" class="rounded-circle border border-warning mb-2" width="100" height="100" style="object-fit: cover;" onerror="this.src='https://via.placeholder.com/100?text=Foto'">
     </div>
     <p><b>📌 Sección:</b> ${reg.seccion || 'N/D'}</p>
     <p><b>🎂 Edad:</b> ${reg.edad || 'N/D'} años</p>
-    <p><b>🕊️ Creyente / Bautizado:</b> ${reg.creyente || 'N/D'}</p>
+    <p><b>🕊️ Creyente:</b> ${reg.creyente || 'N/D'}</p>
     <p><b>📍 Dirección:</b> ${reg.direccion || 'N/D'}</p>
     <p><b>📞 Teléfono:</b> ${reg.telefono || 'N/D'}</p>
     <p><b>📅 Fecha de Nacimiento:</b> ${reg.fecha_nacimiento || 'N/D'}</p>
@@ -161,7 +162,7 @@ function mostrarDetalle(reg) {
   const btnWsp = document.getElementById("btnWhatsAppModal");
   if (reg.telefono) {
     const telLimpio = reg.telefono.replace(/\D/g, '');
-    btnWsp.href = `https://wa.me/521${telLimpio}?text=Hola%20${encodeURIComponent(reg.Nombre_completo)},%20te%20contactamos%20de%20la%20Iglesia%20Manantial%20de%20Vida.`;
+    btnWsp.href = `https://wa.me/521${telLimpio}?text=Hola%20${encodeURIComponent(nombre)},%20te%20contactamos%20de%20la%20Iglesia%20Manantial%20de%20Vida.`;
     btnWsp.style.display = "inline-block";
   } else {
     btnWsp.style.display = "none";
@@ -172,19 +173,11 @@ function generarGrafica(data) {
   const ctx = document.getElementById('graficaSecciones');
   if (!ctx) return;
 
-  const conteo = {
-    "Congregantes / Adultos": 0,
-    "Jóvenes": 0,
-    "Niños": 0,
-    "Visita": 0
-  };
+  const conteo = {};
 
   data.forEach(r => {
-    if (conteo[r.seccion] !== undefined) {
-      conteo[r.seccion]++;
-    } else {
-      conteo[r.seccion] = 1;
-    }
+    const sec = r.seccion || "General";
+    conteo[sec] = (conteo[sec] || 0) + 1;
   });
 
   if (miGrafica) miGrafica.destroy();
@@ -196,7 +189,7 @@ function generarGrafica(data) {
       datasets: [{
         label: 'Registros por Sección',
         data: Object.values(conteo),
-        backgroundColor: ['#cbb281', '#3b82f6', '#10b981', '#f59e0b'],
+        backgroundColor: ['#cbb281', '#3b82f6', '#10b981', '#f59e0b', '#ec4899'],
         borderWidth: 1
       }]
     },
@@ -242,7 +235,7 @@ function calcularCumpleanos(data) {
   let html = `<h6 class="text-warning">🎉 Cumpleañeros de Hoy:</h6>`;
   if (cumpleDelDia.length > 0) {
     cumpleDelDia.forEach(c => {
-      html += `<p class="mb-1 text-white">🎂 <b>${c.Nombre_completo}</b> (${c.telefono || 'Sin teléfono'})</p>`;
+      html += `<p class="mb-1 text-white">🎂 <b>${c.nombre_completo}</b> (${c.telefono || 'Sin teléfono'})</p>`;
     });
   } else {
     html += `<p class="text-white-50 small">Ninguno hoy.</p>`;
@@ -251,7 +244,7 @@ function calcularCumpleanos(data) {
   html += `<h6 class="text-success mt-3">📅 Cumpleañeros del Mes:</h6>`;
   if (cumpleDelMes.length > 0) {
     cumpleDelMes.forEach(c => {
-      html += `<p class="mb-1 text-white">🎈 <b>${c.Nombre_completo}</b> - ${c.fecha_nacimiento}</p>`;
+      html += `<p class="mb-1 text-white">🎈 <b>${c.nombre_completo}</b> - ${c.fecha_nacimiento}</p>`;
     });
   } else {
     html += `<p class="text-white-50 small">No hay cumpleañeros este mes.</p>`;
