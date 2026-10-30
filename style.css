@@ -1,37 +1,70 @@
 :root {
-  --primary-navy: #162a45;
-  --accent-blue: #2c4c7c;
-  --kraft-beige: #d4b28c;
-  --light-bg: #f4f6f9;
+  --primary-navy: #102a45;
+  --accent-blue: #1d4ed8;
+  --kraft-beige: #cbb281;
+  --kraft-dark: #b39762;
+  --light-bg: #f8fafc;
 }
 
 body {
   background-color: var(--light-bg);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #333;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #1e293b;
+}
+
+/* Animación de entrada suave */
+.animate-fade {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .navbar-custom {
   background-color: var(--primary-navy) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .btn-custom {
   background-color: var(--kraft-beige);
-  color: #fff;
-  font-weight: bold;
+  color: #102a45;
+  font-weight: 700;
   border: none;
+  transition: all 0.3s ease;
 }
 
 .btn-custom:hover {
-  background-color: #bd9b75;
-  color: #fff;
+  background-color: var(--kraft-dark);
+  color: #ffffff;
+  transform: translateY(-2px);
 }
 
 .card-custom {
+  border: none;
   border-left: 5px solid var(--primary-navy);
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
 }
 
-.semaforo-verde { background-color: #28a745 !important; width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
-.semaforo-amarillo { background-color: #ffc107 !important; width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
-.semaforo-rojo { background-color: #dc3545 !important; width: 15px; height: 15px; border-radius: 50%; display: inline-block; }
+/* Indicadores de Semáforo */
+.semaforo-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+.semaforo-verde { background-color: #22c55e; }
+.semaforo-amarillo { background-color: #eab308; }
+.semaforo-rojo { background-color: #ef4444; }
+
+/* Vista Previa Estilo Mercado Libre */
+.ml-card-expand {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ml-card-expand:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+}
