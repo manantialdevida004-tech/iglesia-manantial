@@ -5,137 +5,228 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Manantial de Vida</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-    <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html">🕊️ Manantial de Vida (Admin)</a>
+  <!-- Proteger con Contraseña Básica de Entrada -->
+  <script>
+    if (sessionStorage.getItem('adminAuth') !== 'true') {
+      const pass = prompt('Área Privada. Ingrese la contraseña de Administración:');
+      if (pass === 'manantial2026') {
+        sessionStorage.setItem('adminAuth', 'true');
+      } else {
+        alert('Contraseña incorrecta.');
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand fw-bold" href="#">⚙️ Admin Dashboard - Manantial de Vida</a>
       <div class="navbar-nav ms-auto">
-        <a class="nav-link" href="index.html">Inicio</a>
-        <a class="nav-link" href="registro.html">Registro</a>
-        <a class="nav-link active" href="admin.html">Admin</a>
-        <a class="nav-link" href="pastor.html">Pastor</a>
+        <a class="nav-link text-white fw-bold" href="index.html">Cerrar Sesión</a>
       </div>
     </div>
   </nav>
 
-  <div class="container my-4">
-    <div class="row mb-3">
-      <div class="col-md-6">
-        <input type="text" id="buscador" class="form-control" placeholder="🔍 Buscar por nombre o teléfono...">
+  <div class="container-fluid px-4 my-4 animate-fade">
+    
+    <!-- Alertas y Notificaciones -->
+    <div id="contenedorAlertas"></div>
+
+    <!-- Menú Rápido y Métricas (Gráficas / Stats) -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="card p-3 shadow-sm border-0 bg-white">
+          <span class="text-muted small fw-bold">TOTAL REGISTRADOS</span>
+          <h2 class="fw-bold mb-0" id="statTotal" style="color: var(--primary-navy);">0</h2>
+        </div>
       </div>
-      <div class="col-md-6 text-end">
-        <button class="btn btn-success btn-sm" onclick="exportarExcel()">📊 Exportar Excel</button>
+      <div class="col-md-3">
+        <div class="card p-3 shadow-sm border-0 bg-white">
+          <span class="text-muted small fw-bold">CONGREGANTES</span>
+          <h2 class="fw-bold mb-0 text-primary" id="statCongregantes">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card p-3 shadow-sm border-0 bg-white">
+          <span class="text-muted small fw-bold">ADOLESCENTES</span>
+          <h2 class="fw-bold mb-0 text-info" id="statAdolescentes">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card p-3 shadow-sm border-0 bg-white">
+          <span class="text-muted small fw-bold">CUMPLEAÑOS MES</span>
+          <h2 class="fw-bold mb-0 text-warning" id="statCumpleMes">0</h2>
+        </div>
       </div>
     </div>
 
-    <!-- Tabla de Registros -->
-    <div class="card shadow p-3 bg-white rounded">
-      <h4 class="mb-3" style="color: var(--primary-navy);">Registros de Congregantes y Adolescentes</h4>
+    <!-- Barra de Búsqueda y Botones de Descarga -->
+    <div class="row g-2 mb-3 align-items-center">
+      <div class="col-md-6">
+        <input type="text" id="buscador" class="form-control form-control-lg border-2" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-outline-success me-2" onclick="exportarExcel()">📊 Descargar Excel</button>
+        <button class="btn btn-outline-danger" onclick="window.print()">📄 Imprimir / PDF</button>
+      </div>
+    </div>
+
+    <!-- Tabla Princpal de Registros -->
+    <div class="card shadow border-0 rounded-4 overflow-hidden mb-5">
+      <div class="card-header navbar-custom text-white fw-bold py-3">
+        📋 Base de Datos de Registros
+      </div>
       <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-dark">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
             <tr>
               <th>Foto</th>
               <th>Nombre</th>
               <th>Sección</th>
+              <th>Edad</th>
               <th>Teléfono</th>
-              <th>Estado</th>
-              <th>Acción</th>
+              <th>Semáforo</th>
+              <th>WhatsApp Rápido</th>
             </tr>
           </thead>
-          <tbody id="tablaRegistros">
-            <!-- Datos cargados por JS -->
-          </tbody>
+          <tbody id="tablaBody"></tbody>
         </table>
       </div>
     </div>
+
+    <!-- Mapa de San Andrés Tuxtla (Opcional) -->
+    <div class="card shadow border-0 rounded-4 p-3 mb-4">
+      <h5 class="fw-bold mb-3" style="color: var(--primary-navy);">🗺️ Mapa de Ubicación de Casas (San Andrés Tuxtla)</h5>
+      <div id="mapaSanAndres" style="height: 350px;" class="rounded-3"></div>
+    </div>
   </div>
 
-  <!-- Modal estilo Mercado Libre para ver detalles -->
-  <div class="modal fade" id="modalDetalle" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+  <!-- Modal Detalle Extendido (Vista Mercado Libre) -->
+  <div class="modal fade" id="modalMercadoLibre" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 rounded-4">
         <div class="modal-header navbar-custom text-white">
-          <h5 class="modal-title">Detalles del Registro</h5>
+          <h5 class="modal-title fw-bold">Ficha Completa del Integrante</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body text-center" id="contenidoDetalle">
-          <!-- Cargado dinámicamente -->
-        </div>
+        <div class="modal-body p-4" id="modalBodyML"></div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
   <script>
-    let registrosGlobales = [];
+    let registrosCache = [];
 
-    async function cargarDatos() {
-      const { data, error } = await _supabase.from('registros_iglesia').select('*');
-      if(error) { console.error(error); return; }
-      registrosGlobales = data;
+    async function initAdmin() {
+      const { data, error } = await _supabase.from('registros_iglesia').select('*').order('created_at', {ascending: false});
+      if(error) return;
+      registrosCache = data;
+
+      actualizarStats(data);
       renderTabla(data);
+      initMapa();
     }
 
-    function renderTabla(data) {
-      const tbody = document.getElementById('tablaRegistros');
+    function actualizarStats(data) {
+      document.getElementById('statTotal').innerText = data.length;
+      document.getElementById('statCongregantes').innerText = data.filter(r => r.seccion === 'congregante').length;
+      document.getElementById('statAdolescentes').innerText = data.filter(r => r.seccion === 'adolescente').length;
+      
+      const hoy = new Date();
+      const cumpleMes = data.filter(r => parseInt(r.fecha_nacimiento.split('-')[1]) === (hoy.getMonth() + 1));
+      document.getElementById('statCumpleMes').innerText = cumpleMes.length;
+
+      if(cumpleMes.length > 0) {
+        document.getElementById('contenedorAlertas').innerHTML = `
+          <div class="alert alert-warning alert-dismissible fade show rounded-3" role="alert">
+            <strong>🎉 ¡Notificación de Cumpleaños!</strong> Hay ${cumpleMes.length} integrante(s) cumpliendo años este mes. ¡Envíales un mensaje!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>`;
+      }
+    }
+
+    function renderTabla(lista) {
+      const tbody = document.getElementById('tablaBody');
       tbody.innerHTML = '';
-      data.forEach(reg => {
-        let semaforoClase = reg.estado_semaforo === 'verde' ? 'semaforo-verde' : reg.estado_semaforo === 'amarillo' ? 'semaforo-amarillo' : 'semaforo-rojo';
+      lista.forEach(reg => {
+        let semClase = reg.estado_semaforo === 'verde' ? 'semaforo-verde' : reg.estado_semaforo === 'amarillo' ? 'semaforo-amarillo' : 'semaforo-rojo';
         tbody.innerHTML += `
-          <tr onclick='verDetalle("${reg.id}")' style="cursor: pointer;">
-            <td><img src="${reg.foto_url || 'https://via.placeholder.com/40'}" class="rounded-circle" width="40" height="40" style="object-fit:cover;"></td>
+          <tr onclick="abrirMercadoLibre('${reg.id}')" style="cursor: pointer;" class="ml-card-expand">
+            <td><img src="${reg.foto_url || 'https://via.placeholder.com/45'}" width="45" height="45" class="rounded-circle shadow-sm" style="object-fit:cover;"></td>
             <td class="fw-bold">${reg.nombre_completo}</td>
-            <td><span class="badge bg-secondary">${reg.seccion}</span></td>
+            <td><span class="badge ${reg.seccion === 'adolescente' ? 'bg-info text-dark' : 'bg-primary'}">${reg.seccion}</span></td>
+            <td>${reg.edad} yrs</td>
             <td>${reg.telefono}</td>
-            <td><span class="${semaforoClase}"></span></td>
+            <td text-center><span class="semaforo-dot ${semClase}" onclick="event.stopPropagation(); cambiarSemaforo('${reg.id}', '${reg.estado_semaforo}')"></span></td>
             <td>
-              <a href="https://wa.me/52${reg.telefono}?text=Hola%20${reg.nombre_completo},%20te%20saludamos%20de%20Iglesia%20Manantial%20de%20Vida" target="_blank" class="btn btn-success btn-sm" onclick="event.stopPropagation();">💬 WhatsApp</a>
+              <a href="https://wa.me/52${reg.telefono}?text=Hola%20${encodeURIComponent(reg.nombre_completo)},%20te%20saludamos%20de%20Iglesia%20Manantial%20de%20Vida." target="_blank" onclick="event.stopPropagation();" class="btn btn-sm btn-success fw-bold">💬 WhatsApp</a>
             </td>
-          </tr>
-        `;
+          </tr>`;
       });
     }
 
-    function verDetalle(id) {
-      const reg = registrosGlobales.find(r => r.id === id);
+    function abrirMercadoLibre(id) {
+      const reg = registrosCache.find(r => r.id === id);
       if(!reg) return;
-      document.getElementById('contenidoDetalle').innerHTML = `
-        <img src="${reg.foto_url || 'https://via.placeholder.com/150'}" class="rounded-circle mb-3 shadow" width="120" height="120" style="object-fit:cover;">
-        <h4 class="fw-bold">${reg.nombre_completo}</h4>
-        <p class="mb-1"><strong>Edad:</strong> ${reg.edad} años | <strong>Sección:</strong> ${reg.seccion}</p>
-        <p class="mb-1"><strong>Creyente:</strong> ${reg.creyente}</p>
-        <p class="mb-1"><strong>Dirección:</strong> ${reg.direccion}</p>
-        <p class="mb-1"><strong>Teléfono:</strong> ${reg.telefono}</p>
-        <p class="mb-3"><strong>Nacimiento:</strong> ${reg.fecha_nacimiento}</p>
-        <a href="https://wa.me/52${reg.telefono}?text=Hola%20${reg.nombre_completo},%20queremos%20confirmar%20su%20visita." target="_blank" class="btn btn-success w-100">Enviar WhatsApp de Confirmación</a>
-      `;
-      new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+      document.getElementById('modalBodyML').innerHTML = `
+        <div class="row align-items-center">
+          <div class="col-md-4 text-center">
+            <img src="${reg.foto_url || 'https://via.placeholder.com/200'}" class="img-fluid rounded-4 shadow mb-3" style="max-height: 220px; object-fit: cover;">
+          </div>
+          <div class="col-md-8">
+            <h3 class="fw-bold mb-1" style="color: var(--primary-navy);">${reg.nombre_completo}</h3>
+            <span class="badge bg-secondary mb-3">${reg.seccion.toUpperCase()}</span>
+            <p class="mb-1"><strong>Edad:</strong> ${reg.edad} años</p>
+            <p class="mb-1"><strong>Creyente:</strong> ${reg.creyente}</p>
+            <p class="mb-1"><strong>Dirección:</strong> ${reg.direccion}</p>
+            <p class="mb-1"><strong>Teléfono:</strong> ${reg.telefono}</p>
+            <p class="mb-3"><strong>Fecha Nacimiento:</strong> ${reg.fecha_nacimiento}</p>
+            <a href="https://wa.me/52${reg.telefono}?text=Hola%20${encodeURIComponent(reg.nombre_completo)},%20confirmamos%20tu%20agendación%20de%20visita." target="_blank" class="btn btn-success w-100 fw-bold py-2">Confirmar Agendación por WhatsApp</a>
+          </div>
+        </div>`;
+      new bootstrap.Modal(document.getElementById('modalMercadoLibre')).show();
+    }
+
+    async function cambiarSemaforo(id, actual) {
+      const nuevo = actual === 'verde' ? 'amarillo' : actual === 'amarillo' ? 'rojo' : 'verde';
+      await _supabase.from('registros_iglesia').update({ estado_semaforo: nuevo }).eq('id', id);
+      initAdmin();
     }
 
     document.getElementById('buscador').addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtrados = registrosGlobales.filter(r => r.nombre_completo.toLowerCase().includes(query) || r.telefono.includes(query));
+      const q = e.target.value.toLowerCase();
+      const filtrados = registrosCache.filter(r => r.nombre_completo.toLowerCase().includes(q) || r.telefono.includes(q) || r.direccion.toLowerCase().includes(q));
       renderTabla(filtrados);
     });
 
     function exportarExcel() {
-      let csv = 'Nombre,Seccion,Edad,Creyente,Direccion,Telefono\n';
-      registrosGlobales.forEach(r => {
-        csv += `"${r.nombre_completo}","${r.seccion}",${r.edad},"${r.creyente}","${r.direccion}","${r.telefono}"\n`;
+      let csv = 'Nombre,Seccion,Edad,Creyente,Direccion,Telefono,FechaNacimiento\n';
+      registrosCache.forEach(r => {
+        csv += `"${r.nombre_completo}","${r.seccion}",${r.edad},"${r.creyente}","${r.direccion}","${r.telefono}","${r.fecha_nacimiento}"\n`;
       });
-      let blob = new Blob([csv], { type: 'text/csv' });
-      let link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = 'registros_manantial_de_vida.csv';
-      link.click();
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'registros_manantial.csv';
+      a.click();
     }
 
-    cargarDatos();
+    function initMapa() {
+      // Coordenadas centradas en San Andrés Tuxtla, Veracruz
+      const map = L.map('mapaSanAndres').setView([18.4489, -95.2133], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+      L.marker([18.4489, -95.2133]).addTo(map).bindPopup('<b>Iglesia Manantial de Vida</b><br>Centro').openPopup();
+    }
+
+    initAdmin();
   </script>
 </body>
 </html>
