@@ -24,20 +24,15 @@
       border-radius: 12px;
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
     }
     .card-evento:hover {
       transform: translateY(-5px);
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
     .card-evento img {
-      height: 520px;
+      height: 280px;
+      object-fit: cover;
       width: 100%;
-      object-fit: contain;
-      background-color: #0d1322;
-      padding: 8px;
     }
 
     .carousel-custom img {
@@ -125,7 +120,7 @@
     </div>
   </div>
 
-  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS (Ajustado para mostrar imágenes completas) -->
+  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS (Conectado a la carpeta eventos/) -->
   <div class="container mb-5">
     <h3 class="section-title">Próximos Eventos</h3>
     
@@ -134,7 +129,7 @@
       <div class="col-md-6">
         <div class="card-evento">
           <img src="eventos/culto_general.jpeg" alt="Culto General" onerror="this.src='eventos/culto_general.jpg'">
-          <div class="p-3 text-center mt-auto">
+          <div class="p-3 text-center">
             <h5 class="fw-bold text-white mb-1">Culto General</h5>
             <p class="text-warning mb-0">10:30 AM • Próximo Domingo</p>
           </div>
@@ -143,7 +138,7 @@
       <div class="col-md-6">
         <div class="card-evento">
           <img src="eventos/jovenes.jpeg" alt="Culto de Jóvenes" onerror="this.src='eventos/jovenes.jpg'">
-          <div class="p-3 text-center mt-auto">
+          <div class="p-3 text-center">
             <h5 class="fw-bold text-white mb-1">Culto de Jóvenes</h5>
             <p class="text-warning mb-0">5:00 PM • Próximo Domingo</p>
           </div>
@@ -156,7 +151,7 @@
       <div class="col-md-6">
         <div class="card-evento">
           <img src="eventos/reunion_oracion.jpeg" alt="Martes de Oración" onerror="this.src='eventos/reunion_oracion.jpg'">
-          <div class="p-3 text-center mt-auto">
+          <div class="p-3 text-center">
             <h5 class="fw-bold text-white mb-1">Martes de Oración</h5>
             <p class="text-warning mb-0">7:00 PM • Próximo Martes</p>
           </div>
@@ -165,7 +160,7 @@
       <div class="col-md-6">
         <div class="card-evento">
           <img src="eventos/ninos.jpeg" alt="Clases de Niños" onerror="this.src='eventos/ninos.jpg'">
-          <div class="p-3 text-center mt-auto">
+          <div class="p-3 text-center">
             <h5 class="fw-bold text-white mb-1">Clases de Niños</h5>
             <p class="text-warning mb-0">5:00 PM • Próximo Sábado</p>
           </div>
@@ -208,10 +203,10 @@
           <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80" class="d-block w-100" alt="Galería 2">
         </div>
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#carruselDos" data-bs-slide-to="prev">
+      <button class="carousel-control-prev" type="button" data-bs-target="#carruselDos" data-bs-slide="prev">
         <span class="carousel-control-prev-icon"></span>
       </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carruselDos" data-bs-slide-to="next">
+      <button class="carousel-control-next" type="button" data-bs-target="#carruselDos" data-bs-slide="next">
         <span class="carousel-control-next-icon"></span>
       </button>
     </div>
