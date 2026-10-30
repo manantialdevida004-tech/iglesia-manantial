@@ -30,19 +30,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const telefono = document.getElementById("telefono") ? document.getElementById("telefono").value.trim() : "";
       const fecha_nacimiento = document.getElementById("fecha_nacimiento") ? document.getElementById("fecha_nacimiento").value : null;
 
-      // 2. Objeto de envío probando las posibles variantes de nombre de columna en la BD
+      // 2. Objeto con el nombre de columna exacto de tu Supabase ('creyente')
       const payload = {
         nombre: nombre,
         seccion: seccion,
         edad: edad,
-        es_creyente: bautizado, // Probamos con 'es_creyente'
+        creyente: bautizado, 
         direccion: direccion,
         telefono: telefono,
         fecha_nacimiento: fecha_nacimiento || null
       };
 
-      // 3. Petición POST a Supabase
-      let response = await fetch(`${SUPABASE_URL}/rest/v1/registros_iglesia`, {
+      // 3. Envío por API REST a Supabase
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/registros_iglesia`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,33 +53,16 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(payload)
       });
 
-      // Si tu columna se llamara 'bautizado' en lugar de 'es_creyente', hacemos un reintento automático
-      if (!response.ok) {
-        payload.bautizado = bautizado;
-        delete payload.es_creyente;
-
-        response = await fetch(`${SUPABASE_URL}/rest/v1/registros_iglesia`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-            "Prefer": "return=minimal"
-          },
-          body: JSON.stringify(payload)
-        });
-      }
-
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.message || `Error al guardar en la base de datos (${response.status})`);
       }
 
-      // 4. Mensaje de éxito
+      // 4. Mensaje de éxito en pantalla
       if (mensajeAlerta) {
         mensajeAlerta.innerHTML = `
           <div class="alert alert-success alert-dismissible fade show border border-success" role="alert">
-            <strong>¡Registro Guardado!</strong> La información de <b>${nombre}</b> se ha registrado exitosamente.
+            <strong>¡Registro Guardado!</strong> La información de <b>${nombre}</b> se ha registrado exitosamente en la base de datos.
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>
         `;
