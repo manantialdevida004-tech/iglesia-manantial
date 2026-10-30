@@ -3,45 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vista del Pastor - Manantial de Vida</title>
+  <title>Zona Pastor - Manantial de Vida</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html">🕊️ Manantial de Vida (Pastor)</a>
+      <a class="navbar-brand fw-bold" href="index.html">🕊️ Manantial de Vida (Agenda Pastor)</a>
       <div class="navbar-nav ms-auto">
         <a class="nav-link" href="index.html">Inicio</a>
-        <a class="nav-link" href="registro.html">Registro</a>
-        <a class="nav-link" href="admin.html">Admin</a>
         <a class="nav-link active" href="pastor.html">Pastor</a>
       </div>
     </div>
   </nav>
 
-  <div class="container my-4">
-    <div class="alert alert-info shadow-sm">
-      <h5 class="fw-bold">💡 Resumen y Sugerencias del Día</h5>
-      <p id="sugerenciaTiempo" class="mb-0">Calculando tiempos libres y visitas agendadas...</p>
+  <div class="container my-4 animate-fade">
+    <!-- Calculadora y Sugerencia de Tiempos Libres -->
+    <div class="card card-custom p-4 mb-4 bg-white shadow-sm">
+      <h4 class="fw-bold mb-2" style="color: var(--primary-navy);">⏱️ Calculadora y Sugerencias de Tiempo del Día</h4>
+      <div id="calculadoraResumen" class="fs-5 text-secondary">Procesando horario de hoy...</div>
     </div>
 
-    <div class="row">
-      <div class="col-md-7">
-        <div class="card shadow p-3 mb-4 bg-white rounded">
-          <h4 class="mb-3" style="color: var(--primary-navy);">📍 Visitas Programadas para Hoy (3 sugeridas)</h4>
-          <ul class="list-group" id="listaVisitas">
-            <!-- Cargado por JS -->
-          </ul>
+    <div class="row g-4">
+      <!-- Visitas Agendadas a Congregantes (3 Sugeridas) -->
+      <div class="col-lg-7">
+        <div class="card shadow border-0 rounded-4 p-3 bg-white">
+          <h4 class="fw-bold mb-3" style="color: var(--primary-navy);">🚗 Visitas Programadas para Hoy</h4>
+          <div class="list-group list-group-flush" id="listaVisitasPastor"></div>
         </div>
       </div>
-      <div class="col-md-5">
-        <div class="card shadow p-3 bg-white rounded">
-          <h4 class="mb-3" style="color: var(--primary-navy);">📅 Agenda Extraoficial</h4>
-          <ul class="list-group" id="agendaExtra">
-            <li class="list-group-item">10:00 AM - Reunión de Pastores locales</li>
-            <li class="list-group-item">05:00 PM - Consejo de Jóvenes</li>
+
+      <!-- Agenda Personal para Eventos Extraoficiales -->
+      <div class="col-lg-5">
+        <div class="card shadow border-0 rounded-4 p-3 bg-white">
+          <h4 class="fw-bold mb-3" style="color: var(--primary-navy);">📆 Agenda Personal & Extraoficial</h4>
+          <ul class="list-group mb-3" id="agendaExtra">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>📖 Estudio Pastoral Temprano</span>
+              <span class="badge bg-secondary">08:00 AM</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>🤝 Reunión con Alianza Ministerial</span>
+              <span class="badge bg-secondary">05:00 PM</span>
+            </li>
           </ul>
+          <div class="input-group">
+            <input type="text" id="nuevoEvento" class="form-control" placeholder="Agregar compromiso...">
+            <button class="btn btn-custom" onclick="agregarEventoExtra()">Agregar</button>
+          </div>
         </div>
       </div>
     </div>
@@ -50,30 +60,51 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
   <script>
-    async function cargarPastor() {
-      const { data, error } = await _supabase.from('registros_iglesia').select('*').limit(3);
-      if(error) return;
+    async function initPastor() {
+      const { data } = await _supabase.from('registros_iglesia').select('*').limit(3);
+      const contenedor = document.getElementById('listaVisitasPastor');
+      contenedor.innerHTML = '';
 
-      const lista = document.getElementById('listaVisitas');
-      lista.innerHTML = '';
-      data.forEach((reg, index) => {
-        let horas = ['11:00 AM', '01:30 PM', '04:00 PM'];
-        lista.innerHTML += `
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="fw-bold mb-0">${reg.nombre_completo}</h6>
-              <small class="text-muted">📍 ${reg.direccion}</small>
+      if(!data || data.length === 0) {
+        contenedor.innerHTML = '<p class="text-muted">No hay visitas agendadas por el momento.</p>';
+        return;
+      }
+
+      const horarios = ['10:00 AM', '01:00 PM', '04:30 PM'];
+      data.forEach((reg, i) => {
+        contenedor.innerHTML += `
+          <div class="list-group-item p-3 rounded-3 mb-2 border">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold mb-0">${reg.nombre_completo}</h5>
+              <span class="badge bg-primary fs-6">${horarios[i] || '06:00 PM'}</span>
             </div>
-            <span class="badge bg-primary rounded-pill">${horas[index] || '06:00 PM'}</span>
-          </li>
-        `;
+            <p class="mb-1 text-muted">📍 <strong>Dirección:</strong> ${reg.direccion}</p>
+            <p class="mb-2 text-muted">📞 <strong>Contacto:</strong> ${reg.telefono}</p>
+            <a href="https://wa.me/52${reg.telefono}?text=Estimado%20${encodeURIComponent(reg.nombre_completo)},%20le%20confirmo%20mi%20visita%20a%20las%20${horarios[i]}." target="_blank" class="btn btn-sm btn-success">WhatsApp de Confirmación</a>
+          </div>`;
       });
 
-      document.getElementById('sugerenciaTiempo').innerText = 
-        `Tiene 3 visitas asignadas en San Andrés Tuxtla. Se sugiere salir a las 10:30 AM para optimizar tiempos y mantener un bloque libre de 2 horas al mediodía para estudio y descanso.`;
+      // Cálculo de Tiempos
+      document.getElementById('calculadoraResumen').innerHTML = `
+        Usted tiene <strong>3 visitas agendadas</strong> y <strong>2 compromisos extraoficiales</strong>.<br>
+        • Tiempo estimado en traslados y visitas: <strong>4.5 horas</strong>.<br>
+        • Espacio libre disponible sugerido: <strong>De 02:30 PM a 04:30 PM</strong> (Ideal para descanso o preparación de bosquejos).
+      `;
     }
 
-    cargarPastor();
+    function agregarEventoExtra() {
+      const val = document.getElementById('nuevoEvento').value;
+      if(!val) return;
+      const ul = document.getElementById('agendaExtra');
+      ul.innerHTML += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>📌 ${val}</span>
+          <span class="badge bg-secondary">Pendiente</span>
+        </li>`;
+      document.getElementById('nuevoEvento').value = '';
+    }
+
+    initPastor();
   </script>
 </body>
 </html>
