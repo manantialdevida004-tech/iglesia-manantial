@@ -3,130 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Registro Congregantes - Manantial de Vida</title>
+  <title>Registro de Congregantes - Iglesia Manantial de Vida</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #080c14;
+      color: #f1f5f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
+    }
+
+    .navbar-custom {
+      background-color: #0f172a !important;
+      border-bottom: 2px solid #1e3a8a;
+    }
+
+    /* Animación de entrada suave */
+    .fade-in-up {
+      animation: fadeInUp 0.8s ease-in-out;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tarjeta del Formulario Estética y Oscura */
+    .card-registro {
+      background-color: #111827;
+      border: 1px solid #1f2937;
+      border-top: 5px solid #cbb281;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Campos de entrada personalizados */
+    .form-control, .form-select {
+      background-color: #0f172a;
+      border: 1px solid #374151;
+      color: #f8fafc;
+      border-radius: 8px;
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: #0f172a;
+      border-color: #cbb281;
+      color: #ffffff;
+      box-shadow: 0 0 0 0.25rem rgba(203, 178, 129, 0.25);
+    }
+    .form-control::placeholder {
+      color: #6b7280;
+    }
+
+    label {
+      color: #e2e8f0;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    /* Botón con estilo Kraft/Beige del Logo */
+    .btn-kraft {
+      background-color: #cbb281;
+      color: #080c14;
+      font-weight: bold;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .btn-kraft:hover {
+      background-color: #b39762;
+      color: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(203, 178, 129, 0.3);
+    }
+  </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
     <div class="container">
-      <a class="navbar-brand fw-bold" href="index.html">🕊️ Manantial de Vida</a>
+      <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
+        <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
+        <span style="color: #cbb281; font-size: 1.1rem;">Manantial de Vida</span>
+      </a>
+      <button class="navbar-toggler border-0 text-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <div class="navbar-nav gap-2 mt-2 mt-lg-0">
+          <a class="btn btn-outline-light btn-sm px-3" href="index.html">Inicio</a>
+          <a class="btn btn-outline-warning btn-sm px-3 active" href="registro.html">Registro</a>
+          <a class="btn btn-outline-light btn-sm px-3" href="admin.html">Admin</a>
+          <a class="btn btn-outline-light btn-sm px-3" href="pastor.html">Pastor</a>
+        </div>
+      </div>
     </div>
   </nav>
 
-  <div class="container my-5 animate-fade" style="max-width: 650px;">
-    <div class="card shadow-lg p-4 rounded-4 border-0">
-      <div class="text-center mb-4">
-        <h2 class="fw-bold" style="color: var(--primary-navy);">📝 Formulario de Registro</h2>
-        <p class="text-muted">Manantial de Vida - San Andrés Tuxtla</p>
+  <!-- CONTENEDOR DEL FORMULARIO -->
+  <div class="container my-5 fade-in-up">
+    <div class="row justify-content-center">
+      <div class="col-lg-7 col-md-9">
+        <div class="card card-registro p-4 p-md-5">
+          
+          <div class="text-center mb-4">
+            <h2 class="fw-bold" style="color: #cbb281;">📝 Formulario de Registro</h2>
+            <p class="text-muted small">Iglesia Cristiana Manantial de Vida - San Andrés Tuxtla, Ver.</p>
+          </div>
+
+          <form id="formRegistro">
+            <div class="mb-3">
+              <label class="form-label">1. Sección de Pertenencia</label>
+              <select class="form-select" id="seccion" required>
+                <option value="Congregantes / Adultos">Congregantes / Adultos</option>
+                <option value="Jóvenes">Jóvenes</option>
+                <option value="Niños">Niños</option>
+                <option value="Visita">Visita</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">2. Nombre Completo</label>
+              <input type="text" class="form-control" id="nombre" placeholder="Nombre(s) y Apellidos" required>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="form-label">3. Edad</label>
+                <input type="number" class="form-control" id="edad" placeholder="Ej. 25" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">4. ¿Es Creyente / Bautizado?</label>
+                <select class="form-select" id="bautizado">
+                  <option value="Sí">Sí</option>
+                  <option value="No">No</option>
+                  <option value="En proceso">En proceso</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">5. Dirección (Calle, Número, Colonia)</label>
+              <input type="text" class="form-control" id="direccion" placeholder="Ej. C. Octavio Pérez González, El Cebollal" required>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6 mb-3 mb-md-0">
+                <label class="form-label">6. Teléfono / WhatsApp</label>
+                <input type="tel" class="form-control" id="telefono" placeholder="294 123 4567" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">7. Fecha de Nacimiento</label>
+                <input type="date" class="form-control" id="fecha_nacimiento" required>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label">8. Fotografía Personal</label>
+              <input type="file" class="form-control" id="foto" accept="image/*">
+              <div class="form-text text-muted small">Puedes tomarte la foto directo con la cámara del celular o seleccionar una de tu galería.</div>
+            </div>
+
+            <button type="submit" class="btn btn-kraft w-100 shadow">💾 Registrar Información</button>
+          </form>
+
+        </div>
       </div>
-
-      <form id="formRegistro">
-        <!-- Pregunta 1: Sección -->
-        <div class="mb-3">
-          <label class="form-label fw-bold">1. Sección de Pertenencia</label>
-          <select class="form-select border-2" id="seccion" required>
-            <option value="congregante">Congregantes / Adultos</option>
-            <option value="adolescente">Adolescentes / Jóvenes</option>
-          </select>
-        </div>
-
-        <!-- Pregunta 2: Nombre Completo -->
-        <div class="mb-3">
-          <label class="form-label fw-bold">2. Nombre Completo</label>
-          <input type="text" class="form-control border-2" id="nombre" placeholder="Nombre(s) y Apellidos" required>
-        </div>
-
-        <!-- Pregunta 3 & 4: Edad y Creyente -->
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label fw-bold">3. Edad</label>
-            <input type="number" class="form-control border-2" id="edad" placeholder="Años" required>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label fw-bold">4. ¿Es Creyente / Bautizado?</label>
-            <select class="form-select border-2" id="creyente" required>
-              <option value="Si">Sí</option>
-              <option value="No">No</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Pregunta 5: Dirección para Maps -->
-        <div class="mb-3">
-          <label class="form-label fw-bold">5. Dirección (Calle, Número, Colonia)</label>
-          <input type="text" class="form-control border-2" id="direccion" placeholder="Ej. Calle Juárez #123, Col. Centro" required>
-        </div>
-
-        <!-- Pregunta 6 & 7: Teléfono y Fecha Nacimiento -->
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label fw-bold">6. Teléfono / WhatsApp</label>
-            <input type="tel" class="form-control border-2" id="telefono" placeholder="294 123 4567" required>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label fw-bold">7. Fecha de Nacimiento</label>
-            <input type="date" class="form-control border-2" id="fechaNac" required>
-          </div>
-        </div>
-
-        <!-- Pregunta 8: Tomar o Subir Foto -->
-        <div class="mb-4">
-          <label class="form-label fw-bold">8. Fotografía Personal (Tomar foto o Seleccionar)</label>
-          <input type="file" class="form-control border-2" id="fotoFile" accept="image/*" capture="user" required>
-          <div class="form-text">Puedes tomarte la foto directo con la cámara del celular o seleccionar una de tu galería.</div>
-        </div>
-
-        <button type="submit" id="btnEnviar" class="btn btn-custom w-100 py-3 rounded-3 fs-5">
-          💾 Registrar Información
-        </button>
-      </form>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <footer class="text-center py-4 text-muted border-top border-secondary small mt-5" style="background-color: #04060a;">
+    <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz 🕊️</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="app.js"></script>
-  <script>
-    document.getElementById('formRegistro').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btnEnviar');
-      btn.disabled = true;
-      btn.innerText = 'Guardando datos...';
-
-      try {
-        const nombre = document.getElementById('nombre').value;
-        const edad = parseInt(document.getElementById('edad').value);
-        const seccion = document.getElementById('seccion').value;
-        const creyente = document.getElementById('creyente').value;
-        const direccion = document.getElementById('direccion').value;
-        const telefono = document.getElementById('telefono').value;
-        const fechaNac = document.getElementById('fechaNac').value;
-        const fileInput = document.getElementById('fotoFile').files[0];
-
-        let fotoUrl = '';
-        if(fileInput) {
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-          const { data: uploadData, error: uploadErr } = await _supabase.storage.from('fotos-iglesia').upload(fileName, fileInput);
-          if(!uploadErr) {
-            const { data: pubUrl } = _supabase.storage.from('fotos-iglesia').getPublicUrl(fileName);
-            fotoUrl = pubUrl.publicUrl;
-          }
-        }
-
-        const { error } = await _supabase.from('registros_iglesia').insert([{
-          nombre_completo: nombre, edad, seccion, creyente, direccion, telefono, fecha_nacimiento: fechaNac, foto_url: fotoUrl
-        }]);
-
-        if(error) throw error;
-        alert('¡Registro exitoso! Bendiciones.');
-        document.getElementById('formRegistro').reset();
-      } catch (err) {
-        alert('Error al registrar: ' + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = '💾 Registrar Información';
-      }
-    });
-  </script>
 </body>
 </html>
