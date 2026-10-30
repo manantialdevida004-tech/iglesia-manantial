@@ -39,12 +39,19 @@
       object-fit: cover;
     }
 
-    /* Carruseles con proporción rectangular de imagen */
+    /* Carrusel 1 y 2 con proporción rectangular exacta adaptable a celulares */
+    .carousel-custom {
+      background-color: #000000;
+      border-radius: 1rem;
+    }
+    
     .carousel-custom img {
       width: 100%;
       height: auto;
+      max-height: 500px;
       aspect-ratio: 16 / 9;
-      object-fit: cover;
+      object-fit: contain; /* Esto evita que la imagen se recorte o se haga cuadrada */
+      margin: 0 auto;
     }
 
     .section-title {
@@ -98,7 +105,7 @@
     <h1 class="fw-bold fs-3 fs-md-2" style="color: #ffffff;">Iglesia Cristiana <span style="color: #cbb281;">Manantial de Vida</span></h1>
   </div>
 
-  <!-- 3. CARRUSEL 1 -->
+  <!-- 3. CARRUSEL 1 (Tamaño rectangular respetado para celular y PC) -->
   <div class="container mb-5">
     <h3 class="section-title fs-4">Actividades y Eventos</h3>
     <div id="carruselUno" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
