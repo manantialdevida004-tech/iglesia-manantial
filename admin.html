@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Manantial de Vida</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="index.html">🕊️ Manantial de Vida (Admin)</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="index.html">Inicio</a>
+        <a class="nav-link" href="registro.html">Registro</a>
+        <a class="nav-link active" href="admin.html">Admin</a>
+        <a class="nav-link" href="pastor.html">Pastor</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-4">
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <input type="text" id="buscador" class="form-control" placeholder="🔍 Buscar por nombre o teléfono...">
+      </div>
+      <div class="col-md-6 text-end">
+        <button class="btn btn-success btn-sm" onclick="exportarExcel()">📊 Exportar Excel</button>
+      </div>
+    </div>
+
+    <!-- Tabla de Registros -->
+    <div class="card shadow p-3 bg-white rounded">
+      <h4 class="mb-3" style="color: var(--primary-navy);">Registros de Congregantes y Adolescentes</h4>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Foto</th>
+              <th>Nombre</th>
+              <th>Sección</th>
+              <th>Teléfono</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaRegistros">
+            <!-- Datos cargados por JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal estilo Mercado Libre para ver detalles -->
+  <div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header navbar-custom text-white">
+          <h5 class="modal-title">Detalles del Registro</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center" id="contenidoDetalle">
+          <!-- Cargado dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    let registrosGlobales = [];
+
+    async function cargarDatos() {
+      const { data, error } = await _supabase.from('registros_iglesia').select('*');
+      if(error) { console.error(error); return; }
+      registrosGlobales = data;
+      renderTabla(data);
+    }
+
+    function renderTabla(data) {
+      const tbody = document.getElementById('tablaRegistros');
+      tbody.innerHTML = '';
+      data.forEach(reg => {
+        let semaforoClase = reg.estado_semaforo === 'verde' ? 'semaforo-verde' : reg.estado_semaforo === 'amarillo' ? 'semaforo-amarillo' : 'semaforo-rojo';
+        tbody.innerHTML += `
+          <tr onclick='verDetalle("${reg.id}")' style="cursor: pointer;">
+            <td><img src="${reg.foto_url || 'https://via.placeholder.com/40'}" class="rounded-circle" width="40" height="40" style="object-fit:cover;"></td>
+            <td class="fw-bold">${reg.nombre_completo}</td>
+            <td><span class="badge bg-secondary">${reg.seccion}</span></td>
+            <td>${reg.telefono}</td>
+            <td><span class="${semaforoClase}"></span></td>
+            <td>
+              <a href="https://wa.me/52${reg.telefono}?text=Hola%20${reg.nombre_completo},%20te%20saludamos%20de%20Iglesia%20Manantial%20de%20Vida" target="_blank" class="btn btn-success btn-sm" onclick="event.stopPropagation();">💬 WhatsApp</a>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function verDetalle(id) {
+      const reg = registrosGlobales.find(r => r.id === id);
+      if(!reg) return;
+      document.getElementById('contenidoDetalle').innerHTML = `
+        <img src="${reg.foto_url || 'https://via.placeholder.com/150'}" class="rounded-circle mb-3 shadow" width="120" height="120" style="object-fit:cover;">
+        <h4 class="fw-bold">${reg.nombre_completo}</h4>
+        <p class="mb-1"><strong>Edad:</strong> ${reg.edad} años | <strong>Sección:</strong> ${reg.seccion}</p>
+        <p class="mb-1"><strong>Creyente:</strong> ${reg.creyente}</p>
+        <p class="mb-1"><strong>Dirección:</strong> ${reg.direccion}</p>
+        <p class="mb-1"><strong>Teléfono:</strong> ${reg.telefono}</p>
+        <p class="mb-3"><strong>Nacimiento:</strong> ${reg.fecha_nacimiento}</p>
+        <a href="https://wa.me/52${reg.telefono}?text=Hola%20${reg.nombre_completo},%20queremos%20confirmar%20su%20visita." target="_blank" class="btn btn-success w-100">Enviar WhatsApp de Confirmación</a>
+      `;
+      new bootstrap.Modal(document.getElementById('modalDetalle')).show();
+    }
+
+    document.getElementById('buscador').addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase();
+      const filtrados = registrosGlobales.filter(r => r.nombre_completo.toLowerCase().includes(query) || r.telefono.includes(query));
+      renderTabla(filtrados);
+    });
+
+    function exportarExcel() {
+      let csv = 'Nombre,Seccion,Edad,Creyente,Direccion,Telefono\n';
+      registrosGlobales.forEach(r => {
+        csv += `"${r.nombre_completo}","${r.seccion}",${r.edad},"${r.creyente}","${r.direccion}","${r.telefono}"\n`;
+      });
+      let blob = new Blob([csv], { type: 'text/csv' });
+      let link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = 'registros_manantial_de_vida.csv';
+      link.click();
+    }
+
+    cargarDatos();
+  </script>
+</body>
+</html>
