@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // 2. Objeto con los nombres exactos de columnas de tu base de datos Supabase
       const payload = {
-        Nombre_completo: nombre,
+        nombre_completo: nombre,
         edad: edad,
         seccion: seccion,
         creyente: bautizado,
