@@ -30,18 +30,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const telefono = document.getElementById("telefono") ? document.getElementById("telefono").value.trim() : "";
       const fecha_nacimiento = document.getElementById("fecha_nacimiento") ? document.getElementById("fecha_nacimiento").value : null;
 
-      // 2. Objeto con el nombre de columna exacto de tu Supabase ('creyente')
+      // 2. Objeto con los nombres exactos de columnas de tu base de datos Supabase
       const payload = {
-        nombre: nombre,
-        seccion: seccion,
+        Nombre_completo: nombre,
         edad: edad,
-        creyente: bautizado, 
+        seccion: seccion,
+        creyente: bautizado,
         direccion: direccion,
         telefono: telefono,
         fecha_nacimiento: fecha_nacimiento || null
       };
 
-      // 3. Envío por API REST a Supabase
+      // 3. Envío por API REST a la tabla registros_iglesia
       const response = await fetch(`${SUPABASE_URL}/rest/v1/registros_iglesia`, {
         method: "POST",
         headers: {
