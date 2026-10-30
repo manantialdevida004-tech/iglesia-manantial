@@ -33,21 +33,18 @@
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
     .card-evento img {
-      height: 220px;
-      object-fit: cover;
       width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
     }
 
-    /* Carruseles responsivos y estéticos para celular */
+    /* Carruseles con proporción rectangular de imagen */
     .carousel-custom img {
-      height: 320px;
-      object-fit: cover;
       width: 100%;
-    }
-    @media (min-width: 768px) {
-      .carousel-custom img {
-        height: 450px;
-      }
+      height: auto;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
     }
 
     .section-title {
@@ -101,7 +98,7 @@
     <h1 class="fw-bold fs-3 fs-md-2" style="color: #ffffff;">Iglesia Cristiana <span style="color: #cbb281;">Manantial de Vida</span></h1>
   </div>
 
-  <!-- 3. CARRUSEL 1 (Actividades y Eventos) -->
+  <!-- 3. CARRUSEL 1 -->
   <div class="container mb-5">
     <h3 class="section-title fs-4">Actividades y Eventos</h3>
     <div id="carruselUno" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
@@ -130,7 +127,7 @@
     </div>
   </div>
 
-  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS (4 Tarjetas adaptables) -->
+  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS -->
   <div class="container mb-5">
     <h3 class="section-title fs-4">Próximos Eventos</h3>
     
@@ -195,7 +192,7 @@
     </div>
   </div>
 
-  <!-- 7. CARRUSEL 2 (Galería de Actividades) -->
+  <!-- 7. CARRUSEL 2 -->
   <div class="container mb-5">
     <h3 class="section-title fs-4">Galería de Actividades y Eventos</h3>
     <div id="carruselDos" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
