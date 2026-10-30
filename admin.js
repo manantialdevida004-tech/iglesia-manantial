@@ -3,9 +3,10 @@ const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
 
 let registrosGlobales = [];
 let miGrafica = null;
+let indiceCumpleActual = 0;
+let listaCumpleMesGlobal = [];
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Validar sesión de admin
   if (localStorage.getItem("adminLogueado") !== "true") {
     window.location.href = "admin-login.html";
   }
@@ -19,8 +20,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   cargarRegistrosAdmin();
+  cargarVisitasYEventos();
 
-  // Buscador en tiempo real
+  // Buscador
   const inputBuscador = document.getElementById("inputBuscador");
   if (inputBuscador) {
     inputBuscador.addEventListener("input", (e) => {
@@ -34,33 +36,70 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Botones de navegación de cumpleañeros
+  document.getElementById("btnProximoCumple").addEventListener("click", () => {
+    if (listaCumpleMesGlobal.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual + 1) % listaCumpleMesGlobal.length;
+    mostrarCumpleDestacado(indiceCumpleActual);
+  });
+
+  document.getElementById("btnAnteriorCumple").addEventListener("click", () => {
+    if (listaCumpleMesGlobal.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual - 1 + listaCumpleMesGlobal.length) % listaCumpleMesGlobal.length;
+    mostrarCumpleDestacado(indiceCumpleActual);
+  });
+
+  // Guardar Visita Pastoral
+  document.getElementById("btnGuardarVisita").addEventListener("click", async () => {
+    const nombre = document.getElementById("visitaNombre").value.trim();
+    const fecha = document.getElementById("visitaFecha").value;
+    if (!nombre || !fecha) return alert("Por favor completa los campos de la visita.");
+
+    try {
+      const { error } = await supabaseInsertarVisita({ titulo: `Visita a ${nombre}`, fecha_hora: fecha, tipo: 'Visita' });
+      if (error) throw error;
+      alert("Visita guardada exitosamente.");
+      document.getElementById("visitaNombre").value = "";
+      document.getElementById("visitaFecha").value = "";
+      cargarVisitasYEventos();
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar la visita.");
+    }
+  });
+
+  // Guardar Evento del Pastor
+  document.getElementById("btnGuardarEvento").addEventListener("click", async () => {
+    const titulo = document.getElementById("eventoTitulo").value.trim();
+    const fecha = document.getElementById("eventoFecha").value;
+    if (!titulo || !fecha) return alert("Por favor completa los campos del evento.");
+
+    try {
+      const { error } = await supabaseInsertarVisita({ titulo: titulo, fecha_hora: fecha, tipo: 'EventoPastor' });
+      if (error) throw error;
+      alert("Evento guardado exitosamente.");
+      document.getElementById("eventoTitulo").value = "";
+      document.getElementById("eventoFecha").value = "";
+      cargarVisitasYEventos();
+    } catch (err) {
+      console.error(err);
+      alert("Error al guardar el evento.");
+    }
+  });
+
   // Exportar Excel
-  const btnExcel = document.getElementById("btnExportarExcel");
-  if (btnExcel) {
-    btnExcel.addEventListener("click", () => {
-      if (registrosGlobales.length === 0) return alert("No hay datos para exportar");
-      const ws = XLSX.utils.json_to_sheet(registrosGlobales);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Congregantes");
-      XLSX.writeFile(wb, "Reporte_Congregantes_Manantial.xlsx");
-    });
-  }
+  document.getElementById("btnExportarExcel").addEventListener("click", () => {
+    if (registrosGlobales.length === 0) return alert("No hay datos para exportar");
+    const ws = XLSX.utils.json_to_sheet(registrosGlobales);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Congregantes");
+    XLSX.writeFile(wb, "Reporte_Congregantes_Manantial.xlsx");
+  });
 
   // Exportar PDF
-  const btnPDF = document.getElementById("btnExportarPDF");
-  if (btnPDF) {
-    btnPDF.addEventListener("click", () => {
-      const elemento = document.body;
-      const opciones = {
-        margin: 1,
-        filename: 'Reporte_Manantial.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().from(elemento).save();
-    });
-  }
+  document.getElementById("btnExportarPDF").addEventListener("click", () => {
+    html2pdf().from(document.body).save('Reporte_Manantial.pdf');
+  });
 });
 
 async function cargarRegistrosAdmin() {
@@ -72,36 +111,29 @@ async function cargarRegistrosAdmin() {
       }
     });
 
-    if (!response.ok) throw new Error("Error al obtener registros de Supabase");
-
+    if (!response.ok) throw new Error("Error al obtener registros");
     registrosGlobales = await response.json();
     
     actualizarKPIs(registrosGlobales);
     renderizarTarjetas(registrosGlobales);
     generarGrafica(registrosGlobales);
-    calcularCumpleanos(registrosGlobales);
+    procesarCumpleanosCongregacion(registrosGlobales);
 
   } catch (err) {
     console.error("Error:", err);
-    document.getElementById("listaTarjetas").innerHTML = `<p class="text-danger text-center">Error al conectar con la base de datos.</p>`;
   }
 }
 
 function actualizarKPIs(data) {
-  const total = data.length;
-  const congregantes = data.filter(r => r.seccion === "Congregantes / Adultos").length;
-  const jovenesNinos = data.filter(r => r.seccion === "Jóvenes" || r.seccion === "Niños" || r.seccion === "adolescente").length;
+  document.getElementById("kpiTotal").textContent = data.length;
+  document.getElementById("kpiCongregantes").textContent = data.filter(r => r.seccion === "Congregantes / Adultos").length;
+  document.getElementById("kpiJovenes").textContent = data.filter(r => r.seccion === "Jóvenes" || r.seccion === "Niños" || r.seccion === "adolescente").length;
   
   const mesActual = new Date().getMonth() + 1;
   const cumpleMes = data.filter(r => {
     if (!r.fecha_nacimiento) return false;
-    const mesNac = parseInt(r.fecha_nacimiento.split("-")[1], 10);
-    return mesNac === mesActual;
+    return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mesActual;
   }).length;
-
-  document.getElementById("kpiTotal").textContent = total;
-  document.getElementById("kpiCongregantes").textContent = congregantes;
-  document.getElementById("kpiJovenes").textContent = jovenesNinos;
   document.getElementById("kpiCumple").textContent = cumpleMes;
 }
 
@@ -110,7 +142,7 @@ function renderizarTarjetas(data) {
   if (!contenedor) return;
 
   if (data.length === 0) {
-    contenedor.innerHTML = `<p class="text-white-50 text-center py-3">No se encontraron registros en la base de datos.</p>`;
+    contenedor.innerHTML = `<p class="text-white-50 text-center py-3">No hay registros en la base de datos.</p>`;
     return;
   }
 
@@ -143,13 +175,11 @@ function renderizarTarjetas(data) {
 function mostrarDetalle(reg) {
   const nombre = reg.nombre_completo || "Detalle del Congregante";
   document.getElementById("modalNombreTitulo").textContent = nombre;
-  
   const foto = reg.foto_url && reg.foto_url.trim() !== "" ? reg.foto_url : "https://via.placeholder.com/120?text=Sin+Foto";
 
-  const contenido = document.getElementById("modalContenidoDetalle");
-  contenido.innerHTML = `
+  document.getElementById("modalContenidoDetalle").innerHTML = `
     <div class="text-center mb-3">
-      <img src="${foto}" class="rounded-circle border border-warning mb-2" width="100" height="100" style="object-fit: cover;" onerror="this.src='https://via.placeholder.com/100?text=Foto'">
+      <img src="${foto}" class="rounded-circle border border-warning mb-2" width="100" height="100" style="object-fit: cover;">
     </div>
     <p><b>📌 Sección:</b> ${reg.seccion || 'N/D'}</p>
     <p><b>🎂 Edad:</b> ${reg.edad || 'N/D'} años</p>
@@ -172,16 +202,13 @@ function mostrarDetalle(reg) {
 function generarGrafica(data) {
   const ctx = document.getElementById('graficaSecciones');
   if (!ctx) return;
-
   const conteo = {};
-
   data.forEach(r => {
     const sec = r.seccion || "General";
     conteo[sec] = (conteo[sec] || 0) + 1;
   });
 
   if (miGrafica) miGrafica.destroy();
-
   miGrafica = new Chart(ctx, {
     type: 'bar',
     data: {
@@ -196,9 +223,7 @@ function generarGrafica(data) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#ffffff' } }
-      },
+      plugins: { legend: { labels: { color: '#ffffff' } } },
       scales: {
         x: { ticks: { color: '#ffffff' } },
         y: { ticks: { color: '#ffffff' }, grid: { color: '#374151' } }
@@ -207,48 +232,112 @@ function generarGrafica(data) {
   });
 }
 
-function calcularCumpleanos(data) {
-  const contenedor = document.getElementById("listaCumpleanosModal");
-  if (!contenedor) return;
-
-  const hoy = new Date();
-  const mesActual = hoy.getMonth() + 1;
-  const diaActual = hoy.getDate();
-
-  const cumpleDelDia = [];
-  const cumpleDelMes = [];
-
-  data.forEach(r => {
-    if (!r.fecha_nacimiento) return;
-    const partes = r.fecha_nacimiento.split("-");
-    const mesNac = parseInt(partes[1], 10);
-    const diaNac = parseInt(partes[2], 10);
-
-    if (mesNac === mesActual) {
-      cumpleDelMes.push(r);
-      if (diaNac === diaActual) {
-        cumpleDelDia.push(r);
-      }
-    }
+function procesarCumpleanosCongregacion(data) {
+  const mesActual = new Date().getMonth() + 1;
+  listaCumpleMesGlobal = data.filter(r => {
+    if (!r.fecha_nacimiento) return false;
+    return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mesActual;
   });
 
-  let html = `<h6 class="text-warning">🎉 Cumpleañeros de Hoy:</h6>`;
-  if (cumpleDelDia.length > 0) {
-    cumpleDelDia.forEach(c => {
-      html += `<p class="mb-1 text-white">🎂 <b>${c.nombre_completo}</b> (${c.telefono || 'Sin teléfono'})</p>`;
-    });
+  if (listaCumpleMesGlobal.length > 0) {
+    indiceCumpleActual = 0;
+    mostrarCumpleDestacado(indiceCumpleActual);
   } else {
-    html += `<p class="text-white-50 small">Ninguno hoy.</p>`;
+    document.getElementById("cumpleDestacadoContainer").innerHTML = `<p class="text-white-50">No hay cumpleañeros registrados este mes.</p>`;
   }
 
-  html += `<h6 class="text-success mt-3">📅 Cumpleañeros del Mes:</h6>`;
-  if (cumpleDelMes.length > 0) {
-    cumpleDelMes.forEach(c => {
-      html += `<p class="mb-1 text-white">🎈 <b>${c.nombre_completo}</b> - ${c.fecha_nacimiento}</p>`;
-    });
-  } else {
-    html += `<p class="text-white-50 small">No hay cumpleañeros este mes.</p>`;
+  // Llenar modal general de cumpleaños
+  const contenedorModal = document.getElementById("listaCumpleanosModal");
+  if (contenedorModal) {
+    let html = `<h6 class="text-success">🎈 Cumpleañeros del Mes (${listaCumpleMesGlobal.length}):</h6>`;
+    if (listaCumpleMesGlobal.length > 0) {
+      listaCumpleMesGlobal.forEach(c => {
+        html += `<p class="mb-1 text-white">🎂 <b>${c.nombre_completo}</b> - ${c.fecha_nacimiento}</p>`;
+      });
+    } else {
+      html += `<p class="text-white-50 small">Ninguno este mes.</p>`;
+    }
+    contenedorModal.innerHTML = html;
   }
+}
 
-  contenedor.innerHTML = html;
+function mostrarCumpleDestacado(index) {
+  const persona = listaCumpleMesGlobal[index];
+  if (!persona) return;
+
+  const foto = persona.foto_url || "https://via.placeholder.com/100?text=Foto";
+  const container = document.getElementById("cumpleDestacadoContainer");
+  const btnWsp = document.getElementById("btnEnviarMensajeCumple");
+
+  container.innerHTML = `
+    <img src="${foto}" class="rounded-circle border border-success" width="70" height="70" style="object-fit: cover;">
+    <div>
+      <h5 class="text-white mb-1">${persona.nombre_completo}</h5>
+      <p class="text-success small mb-0">🎉 Cumpleaños: <b>${persona.fecha_nacimiento}</b></p>
+      <small class="text-white-50">Sección: ${persona.seccion}</small>
+    </div>
+  `;
+
+  if (persona.telefono) {
+    const telLimpio = persona.telefono.replace(/\D/g, '');
+    btnWsp.href = `https://wa.me/521${telLimpio}?text=¡Feliz%20cumpleaños%20${encodeURIComponent(persona.nombre_completo)}!%20La%20Iglesia%20Manantial%20de%20Vida%20te%20envía%20una%20gran%20bendición%20en%20tu%20día.`;
+    btnWsp.style.display = "inline-block";
+  } else {
+    btnWsp.style.display = "none";
+  }
+}
+
+async function supabaseInsertarVisita(dataObj) {
+  return await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+      "Prefer": "return=minimal"
+    },
+    body: JSON.stringify(dataObj)
+  });
+}
+
+async function cargarVisitasYEventos() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor?select=*`, {
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+    if (!res.ok) return;
+    const items = await res.json();
+
+    const visitas = items.filter(i => i.tipo === 'Visita');
+    const eventos = items.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
+
+    // Contadores de visitas
+    const hoyStr = new Date().toISOString().split("T")[0];
+    const visitasHoy = visitas.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
+    const mesStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
+    const visitasMes = visitas.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
+
+    document.getElementById("conteoVisitasHoy").textContent = visitasHoy;
+    document.getElementById("conteoVisitasMes").textContent = visitasMes;
+
+    // Renderizar lista visitas
+    let htmlV = "";
+    visitas.forEach(v => {
+      htmlV += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded">📍 <b>${v.titulo}</b> <br><small class="text-warning">${v.fecha_hora || ''}</small></div>`;
+    });
+    document.getElementById("listaVisitasAdmin").innerHTML = htmlV || '<p class="text-white-50 small">No hay visitas registradas.</p>';
+
+    // Renderizar lista eventos
+    let htmlE = "";
+    eventos.forEach(e => {
+      htmlE += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded">📖 <b>${e.titulo}</b> <br><small class="text-info">${e.fecha_hora || ''}</small></div>`;
+    });
+    document.getElementById("listaEventosAdmin").innerHTML = htmlE || '<p class="text-white-50 small">No hay eventos o cuentos registrados.</p>';
+
+  } catch (err) {
+    console.error("Error al cargar agenda:", err);
+  }
 }
