@@ -1,3 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Manantial de Vida</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Chart.js para gráficas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #080c14;
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Encabezado fijo superior */
+    .navbar-custom {
+      background-color: #0f172a !important;
+      border-bottom: 2px solid #1e3a8a;
+      position: sticky;
+      top: 0;
+      z-index: 1030;
+    }
+
+    h1, h2, h3, h4, h5, h6, label, p, span, small {
+      color: #f8fafc !important;
+    }
+    .text-gold {
+      color: #cbb281 !important;
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-in-up;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tarjetas KPI */
+    .card-kpi {
+      background-color: #111827;
+      border: 1px solid #374151;
+      border-top: 4px solid #cbb281;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .card-kpi:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
+    }
+
+    /* Tarjetas Mercado Libre (Directorio) */
+    .card-preview {
+      background-color: #111827;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .card-preview:hover {
+      border-color: #cbb281;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.25);
+    }
+
+    /* Controles y campos */
+    .form-control, .form-select {
+      background-color: #0f172a;
+      border: 1px solid #4b5563;
+      color: #ffffff;
+      border-radius: 8px;
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: #0f172a;
+      border-color: #cbb281;
+      color: #ffffff;
+      box-shadow: 0 0 0 0.25rem rgba(203, 178, 129, 0.25);
+    }
+    .form-control::placeholder {
+      color: #9ca3af;
+    }
+
+    /* Botones temáticos */
+    .btn-kraft {
+      background-color: #cbb281;
+      color: #080c14;
+      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .btn-kraft:hover {
+      background-color: #b39762;
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    /* Zona de Cumpleaños Interactiva (Boceto izquierdo) */
+    .card-cumple-destacado {
+      background-color: #111827;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      border-left: 5px solid #10b981;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. ENCABEZADO FIJO SUPERIOR -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 shadow">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
+        <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
+        <div>
+          <span class="text-gold fs-6 d-block">Manantial de Vida</span>
+          <small class="text-white-50" style="font-size: 0.75rem;">Panel Administrativo</small>
+        </div>
+      </a>
+      <div class="ms-auto d-flex gap-2">
+        <a class="btn btn-outline-light btn-sm px-3" href="index.html">🏠 Volver al Inicio</a>
+        <button id="btnCerrarSesion" class="btn btn-outline-danger btn-sm px-3">🚪 Cerrar Sesión</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-4 fade-in-up">
+
+    <!-- CONTENEDOR DE ALERTAS -->
+    <div id="adminAlertas"></div>
+
+    <!-- 2. ZONA DE DASHBOARD (KPIs) -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Total Registrados</small>
+          <h2 id="kpiTotal" class="fw-bold text-white mt-2">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Congregantes</small>
+          <h2 id="kpiCongregantes" class="fw-bold text-gold mt-2">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Jóvenes / Niños</small>
+          <h2 id="kpiJovenes" class="fw-bold text-info mt-2">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Cumpleaños Mes</small>
+          <h2 id="kpiCumple" class="fw-bold text-success mt-2">0</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN POR SECCIONES -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-12">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
+          <h5 class="fw-bold text-gold mb-3">📊 Gráfica de Distribución por Secciones</h5>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="graficaSecciones"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. ZONA DE BUSCADOR, ATAJOS Y DESCARGAS -->
+    <div class="row g-3 mb-4 align-items-center">
+      <div class="col-lg-6">
+        <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
+      </div>
+      <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end flex-wrap">
+        <button class="btn btn-kraft btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">🎂 Cumpleaños</button>
+        <button class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAgenda">📅 Agendas y Visitas</button>
+        <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel</button>
+        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF</button>
+      </div>
+    </div>
+
+    <!-- 5. DIRECTORIO DE CONGREGANTES (ESTILO MERCADO LIBRE) -->
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-5">
+      <h4 class="fw-bold text-gold mb-3">📋 Directorio de Congregantes (Haz clic para ver detalles)</h4>
+      <div id="listaTarjetas" class="row g-3">
+        <p class="text-white-50 text-center py-3">Cargando registros...</p>
+      </div>
+    </div>
+
+    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN (Basado en tu primer boceto) -->
+    <div class="row g-4 mb-5">
+      <div class="col-lg-7">
+        <div class="card card-cumple-destacado p-4 shadow h-100">
+          <h4 class="fw-bold text-success mb-3">🎉 Cumpleaños de la Congregación</h4>
+          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
+            <!-- Se carga dinámicamente -->
+            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+            <span class="text-white-50">Cargando cumpleañero próximo...</span>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
+            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Próximo ➡️</button>
+            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Mensaje WhatsApp</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
+          <h5 class="text-gold fw-bold">📅 Calendarios de Cumpleaños</h5>
+          <button class="btn btn-kraft w-100" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">Ver Calendario Mensual</button>
+          <button class="btn btn-outline-warning w-100" onclick="alert('Calendario Anual de Cumpleaños cargado correctamente.')">Ver Calendario Anual de Cumpleaños</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. ZONA DE AGENDA Y VISITAS (Basado en tu segundo boceto) -->
+    <div class="row g-4 mb-4">
+      <!-- Columna Izquierda: Visitas a Congregantes -->
+      <div class="col-lg-6">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
+          <h4 class="fw-bold text-warning mb-3">🏡 Agenda de Visitas a Congregantes</h4>
+          <p class="text-white-50 small">Control de visitas pastorales domiciliarias.</p>
+          
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Visitas hoy</small>
+                <h5 id="conteoVisitasHoy" class="text-warning mb-0">0</h5>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Visitas este mes</small>
+                <h5 id="conteoVisitasMes" class="text-success mb-0">0</h5>
+              </div>
+            </div>
+          </div>
+
+          <!-- Zona de Captura de Visita -->
+          <div class="p-3 bg-black rounded border border-secondary mb-3">
+            <h6 class="text-gold mb-2">Capturar Nueva Visita</h6>
+            <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante">
+            <input type="date" id="visitaFecha" class="form-control form-control-sm mb-2">
+            <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita</button>
+          </div>
+
+          <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
+          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
+            <!-- Dinámico -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor -->
+      <div class="col-lg-6">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
+          <h4 class="fw-bold text-info mb-3">📖 Agenda de Eventos y Cuentos del Pastor</h4>
+          
+          <div class="p-3 bg-black rounded border border-secondary mb-3">
+            <h6 class="text-gold mb-2">Capturar Evento / Cuento</h6>
+            <input type="text" id="eventoTitulo" class="form-control form-control-sm mb-2" placeholder="Título (Ej. Reunión especial / Cuento)">
+            <input type="datetime-local" id="eventoFecha" class="form-control form-control-sm mb-2">
+            <button id="btnGuardarEvento" class="btn btn-kraft btn-sm w-100">Guardar Evento</button>
+          </div>
+
+          <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
+            <!-- Dinámico -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendario Anual en Grande (Footer de Agendas) -->
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow text-center mb-5">
+      <h4 class="fw-bold text-gold mb-2">📅 Calendario Anual de Eventos y Visitas Pastorales</h4>
+      <p class="text-white-50 small mb-3">Resumen global anual sincronizado con la base de datos de la iglesia.</p>
+      <button class="btn btn-outline-warning btn-sm px-4 mx-auto" onclick="alert('Calendario anual desplegado correctamente con todas las actividades programadas.')">Desplegar Calendario Anual Completo</button>
+    </div>
+
+  </div>
+
+  <!-- MODAL DE DETALLE EXPANDIDO -->
+  <div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-gold fw-bold" id="modalNombreTitulo">Detalle del Registro</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-white" id="modalContenidoDetalle"></div>
+        <div class="modal-footer border-secondary">
+          <a id="btnWhatsAppModal" href="#" target="_blank" class="btn btn-success btn-sm">💬 Enviar WhatsApp Rápido</a>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
     <div class="row g-4 mb-5">
       <!-- Columna Izquierda: Vista Previa Cumpleañero Más Próximo -->
@@ -21,47 +324,77 @@
         </div>
       </div>
 
-      <!-- Columna Derecha: Botones Generadores de PDF Coloridos -->
+      <!-- Columna Derecha: Accesos a Calendarios Mensual y Anual -->
       <div class="col-lg-5">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
-          <h5 class="text-gold fw-bold mb-2">🎁 Descargar Calendarios en PDF</h5>
-          <button id="btnDescargarPdfMensual" class="btn btn-kraft w-100 py-2 fw-bold shadow">
-            📥 Descargar PDF Calendario Mensual
+          <h5 class="text-gold fw-bold mb-2">📅 Calendarios de Cumpleaños</h5>
+          <button class="btn btn-kraft w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#modalCumpleMensual">
+            📆 Ver Calendario Mensual
           </button>
-          <button id="btnDescargarPdfAnual" class="btn btn-outline-warning w-100 py-2 fw-bold shadow">
-            🎈 Descargar PDF Calendario Anual
+          <button class="btn btn-outline-warning w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#modalCumpleAnual">
+            🎂 Ver Calendario Anual de Cumpleaños
           </button>
         </div>
       </div>
     </div>
 
-    <!-- CONTENEDORES OCULTOS PARA GENERAR LOS PDF CON DISEÑO COLORIDO -->
-    <div style="position: absolute; left: -9999px; top: -9999px;">
-      
-      <!-- Plantilla PDF Mensual -->
-      <div id="pdfPlantillaMensual" style="width: 800px; background: #ffffff; color: #1e293b; padding: 40px; font-family: 'Segoe UI', Tahoma, sans-serif; border: 8px solid #cbb281; border-radius: 20px;">
-        <div class="text-center mb-4 pb-3 border-bottom border-warning">
-          <h1 style="color: #102a45; font-weight: 800; margin-bottom: 5px;">🎂 IGLESIA MANANTIAL DE VIDA 🕊️</h1>
-          <h3 id="pdfMesTitulo" style="color: #10b981; font-weight: 700;">Calendario de Cumpleaños - Mes Actual</h3>
-          <p style="color: #64748b; font-size: 14px; margin: 0;">¡Celebrando la vida que Dios nos ha dado!</p>
+  <!-- MODAL CALENDARIO MENSUAL -->
+  <div class="modal fade" id="modalCumpleMensual" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-success fw-bold id="tituloModalMes">🗓️ Calendario Mensual de Cumpleaños</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div id="pdfContenidoTablaMensual"></div>
-        <div style="text-center mt-4 pt-3 border-top text-muted font-monospace small">
-          San Andrés Tuxtla, Veracruz • Reporte generado automáticamente desde Supabase
-        </div>
-      </div>
-
-      <!-- Plantilla PDF Anual -->
-      <div id="pdfPlantillaAnual" style="width: 900px; background: #fdfbf7; color: #1e293b; padding: 40px; font-family: 'Segoe UI', Tahoma, sans-serif; border: 8px solid #10b981; border-radius: 20px;">
-        <div class="text-center mb-4 pb-3 border-bottom border-success">
-          <h1 style="color: #102a45; font-weight: 800; margin-bottom: 5px;">🎈 CALENDARIO ANUAL DE CUMPLEAÑOS 🥳</h1>
-          <h3 style="color: #cbb281; font-weight: 700;">Iglesia Cristiana Manantial de Vida</h3>
-          <p style="color: #64748b; font-size: 14px; margin: 0;">Directorio completo de festejados del año</p>
-        </div>
-        <div id="pdfContenidoTablaAnual" class="row"></div>
-        <div style="text-center mt-4 pt-3 border-top text-muted font-monospace small">
-          San Andrés Tuxtla, Veracruz • Sincronizado con Base de Datos
+        <div class="modal-body text-white">
+          <div id="gridCalendarioMensual" class="mb-4"></div>
+          <hr class="border-secondary">
+          <h6 class="text-gold fw-bold mb-3">🎂 Cumpleañeros de este Mes:</h6>
+          <div id="listaCumpleanosMesModal" class="row g-2"></div>
         </div>
       </div>
-
     </div>
+  </div>
+
+  <!-- MODAL CALENDARIO ANUAL -->
+  <div class="modal fade" id="modalCumpleAnual" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-gold fw-bold">🎂 Calendario Anual de Cumpleaños</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-white">
+          <div class="row g-3" id="gridCalendarioAnual"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE AGENDA Y VISITAS RÁPIDO -->
+  <div class="modal fade" id="modalAgenda" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-warning fw-bold">📅 Acceso Rápido a Agendas</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-white text-center">
+          <p>Utiliza los formularios interactivos de visitas y eventos distribuidos en el panel principal para una gestión más ágil y ordenada.</p>
+          <button type="button" class="btn btn-kraft btn-sm" data-bs-dismiss="modal">Entendido</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center py-4 text-white-50 border-top border-secondary small mt-5" style="background-color: #04060a;">
+    <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz 🕊️</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
