@@ -52,7 +52,7 @@
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
 
-    /* Tarjetas Mercado Libre (Directorio) */
+    /* Tarjetas Directorio */
     .card-preview {
       background-color: #111827;
       border: 1px solid #374151;
@@ -98,7 +98,7 @@
       transform: translateY(-2px);
     }
 
-    /* Zona de Cumpleaños Interactiva (Boceto izquierdo) */
+    /* Zona de Cumpleaños Destacado */
     .card-cumple-destacado {
       background-color: #111827;
       border: 1px solid #374151;
@@ -159,7 +159,7 @@
       </div>
     </div>
 
-    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN POR SECCIONES -->
+    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN -->
     <div class="row g-4 mb-4">
       <div class="col-lg-12">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
@@ -177,14 +177,13 @@
         <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
       </div>
       <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end flex-wrap">
-        <button class="btn btn-kraft btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">🎂 Cumpleaños</button>
         <button class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAgenda">📅 Agendas y Visitas</button>
         <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel</button>
-        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF</button>
+        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF Reporte</button>
       </div>
     </div>
 
-    <!-- 5. DIRECTORIO DE CONGREGANTES (ESTILO MERCADO LIBRE) -->
+    <!-- 5. DIRECTORIO DE CONGREGANTES -->
     <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-5">
       <h4 class="fw-bold text-gold mb-3">📋 Directorio de Congregantes (Haz clic para ver detalles)</h4>
       <div id="listaTarjetas" class="row g-3">
@@ -192,33 +191,42 @@
       </div>
     </div>
 
-    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN (Basado en tu primer boceto) -->
+    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
     <div class="row g-4 mb-5">
+      <!-- Columna Izquierda: Vista Previa del Próximo Cumpleañero -->
       <div class="col-lg-7">
         <div class="card card-cumple-destacado p-4 shadow h-100">
-          <h4 class="fw-bold text-success mb-3">🎉 Cumpleaños de la Congregación</h4>
-          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
-            <!-- Se carga dinámicamente -->
-            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
-            <span class="text-white-50">Cargando cumpleañero próximo...</span>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-success mb-0">🎉 Próximo Cumpleaños</h4>
+            <span class="badge bg-success text-dark fs-6" id="badgeDiasRestantes">Calculando...</span>
           </div>
-          <div class="d-flex gap-2 flex-wrap">
+          
+          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
+            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+            <span class="text-white-50">Cargando datos desde Supabase...</span>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap mt-auto">
             <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
-            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Próximo ➡️</button>
-            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Mensaje WhatsApp</a>
+            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Siguiente ➡️</button>
+            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Felicitación por WhatsApp</a>
           </div>
         </div>
       </div>
+
+      <!-- Columna Derecha: Botón Único para Descargar PDF del Calendario Anual -->
       <div class="col-lg-5">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
-          <h5 class="text-gold fw-bold">📅 Calendarios de Cumpleaños</h5>
-          <button class="btn btn-kraft w-100" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">Ver Calendario Mensual</button>
-          <button class="btn btn-outline-warning w-100" onclick="alert('Calendario Anual de Cumpleaños cargado correctamente.')">Ver Calendario Anual de Cumpleaños</button>
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center text-center">
+          <h5 class="text-gold fw-bold mb-2">📅 Calendario Anual de Cumpleaños</h5>
+          <p class="text-white-50 small mb-3">Descarga el reporte en PDF con todos los cumpleaños de la iglesia organizados mes a mes.</p>
+          <button id="btnGenerarPDFCalendario" class="btn btn-kraft w-100 py-3 fw-bold shadow">
+            📥 Descargar Calendario Anual (PDF)
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- 7. ZONA DE AGENDA Y VISITAS (Basado en tu segundo boceto) -->
+    <!-- 7. ZONA DE AGENDA Y VISITAS -->
     <div class="row g-4 mb-4">
       <!-- Columna Izquierda: Visitas a Congregantes -->
       <div class="col-lg-6">
@@ -241,7 +249,7 @@
             </div>
           </div>
 
-          <!-- Zona de Captura de Visita -->
+          <!-- Captura de Visita -->
           <div class="p-3 bg-black rounded border border-secondary mb-3">
             <h6 class="text-gold mb-2">Capturar Nueva Visita</h6>
             <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante">
@@ -250,9 +258,7 @@
           </div>
 
           <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
-          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
-            <!-- Dinámico -->
-          </div>
+          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
         </div>
       </div>
 
@@ -269,18 +275,9 @@
           </div>
 
           <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
-          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
-            <!-- Dinámico -->
-          </div>
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
         </div>
       </div>
-    </div>
-
-    <!-- Calendario Anual en Grande (Footer de Agendas) -->
-    <div class="card bg-dark border-secondary p-4 rounded-4 shadow text-center mb-5">
-      <h4 class="fw-bold text-gold mb-2">📅 Calendario Anual de Eventos y Visitas Pastorales</h4>
-      <p class="text-white-50 small mb-3">Resumen global anual sincronizado con la base de datos de la iglesia.</p>
-      <button class="btn btn-outline-warning btn-sm px-4 mx-auto" onclick="alert('Calendario anual desplegado correctamente con todas las actividades programadas.')">Desplegar Calendario Anual Completo</button>
     </div>
 
   </div>
@@ -301,75 +298,6 @@
       </div>
     </div>
   </div>
-<!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
-    <div class="row g-4 mb-5">
-      <!-- Columna Izquierda: Vista Previa Cumpleañero Más Próximo -->
-      <div class="col-lg-7">
-        <div class="card card-cumple-destacado p-4 shadow h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold text-success mb-0">🎉 Próximo Cumpleaños</h4>
-            <span class="badge bg-success text-dark fs-6" id="badgeDiasRestantes">Calculando...</span>
-          </div>
-          
-          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
-            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
-            <span class="text-white-50">Cargando datos desde Supabase...</span>
-          </div>
-
-          <div class="d-flex gap-2 flex-wrap mt-auto">
-            <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
-            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Siguiente ➡️</button>
-            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Felicitación por WhatsApp</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Columna Derecha: Accesos a Calendarios Mensual y Anual -->
-      <div class="col-lg-5">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
-          <h5 class="text-gold fw-bold mb-2">📅 Calendarios de Cumpleaños</h5>
-          <button class="btn btn-kraft w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#modalCumpleMensual">
-            📆 Ver Calendario Mensual
-          </button>
-          <button class="btn btn-outline-warning w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#modalCumpleAnual">
-            🎂 Ver Calendario Anual de Cumpleaños
-          </button>
-        </div>
-      </div>
-    </div>
-
-  <!-- MODAL CALENDARIO MENSUAL -->
-  <div class="modal fade" id="modalCumpleMensual" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content bg-dark text-white border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="text-success fw-bold id="tituloModalMes">🗓️ Calendario Mensual de Cumpleaños</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-white">
-          <div id="gridCalendarioMensual" class="mb-4"></div>
-          <hr class="border-secondary">
-          <h6 class="text-gold fw-bold mb-3">🎂 Cumpleañeros de este Mes:</h6>
-          <div id="listaCumpleanosMesModal" class="row g-2"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL CALENDARIO ANUAL -->
-  <div class="modal fade" id="modalCumpleAnual" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content bg-dark text-white border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="text-gold fw-bold">🎂 Calendario Anual de Cumpleaños</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-white">
-          <div class="row g-3" id="gridCalendarioAnual"></div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- MODAL DE AGENDA Y VISITAS RÁPIDO -->
   <div class="modal fade" id="modalAgenda" tabindex="-1">
@@ -380,7 +308,7 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body text-white text-center">
-          <p>Utiliza los formularios interactivos de visitas y eventos distribuidos en el panel principal para una gestión más ágil y ordenada.</p>
+          <p>Utiliza los formularios interactivos de visitas y eventos distribuidos en el panel principal para una gestión más ágil.</p>
           <button type="button" class="btn btn-kraft btn-sm" data-bs-dismiss="modal">Entendido</button>
         </div>
       </div>
