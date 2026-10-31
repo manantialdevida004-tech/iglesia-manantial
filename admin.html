@@ -192,31 +192,75 @@
       </div>
     </div>
 
-    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN (Basado en tu primer boceto) -->
+<!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
     <div class="row g-4 mb-5">
+      <!-- Columna Izquierda: Vista Previa Cumpleañero Más Próximo -->
       <div class="col-lg-7">
         <div class="card card-cumple-destacado p-4 shadow h-100">
-          <h4 class="fw-bold text-success mb-3">🎉 Cumpleaños de la Congregación</h4>
-          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
-            <!-- Se carga dinámicamente -->
-            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
-            <span class="text-white-50">Cargando cumpleañero próximo...</span>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-success mb-0">🎉 Próximo Cumpleaños</h4>
+            <span class="badge bg-success text-dark fs-6" id="badgeDiasRestantes">Calculando...</span>
           </div>
-          <div class="d-flex gap-2 flex-wrap">
+          
+          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
+            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+            <span class="text-white-50">Cargando datos desde Supabase...</span>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap mt-auto">
             <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
-            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Próximo ➡️</button>
-            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Mensaje WhatsApp</a>
+            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Siguiente ➡️</button>
+            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Felicitación por WhatsApp</a>
           </div>
         </div>
       </div>
+
+      <!-- Columna Derecha: Accesos a Calendarios Mensual y Anual -->
       <div class="col-lg-5">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
-          <h5 class="text-gold fw-bold">📅 Calendarios de Cumpleaños</h5>
-          <button class="btn btn-kraft w-100" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">Ver Calendario Mensual</button>
-          <button class="btn btn-outline-warning w-100" onclick="alert('Calendario Anual de Cumpleaños cargado correctamente.')">Ver Calendario Anual de Cumpleaños</button>
+          <h5 class="text-gold fw-bold mb-2">📅 Calendarios de Cumpleaños</h5>
+          <button class="btn btn-kraft w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#modalCumpleMensual">
+            📆 Ver Calendario Mensual
+          </button>
+          <button class="btn btn-outline-warning w-100 py-2 fw-bold" data-bs-toggle="modal" data-bs-target="#modalCumpleAnual">
+            🎂 Ver Calendario Anual de Cumpleaños
+          </button>
         </div>
       </div>
     </div>
+
+  <!-- MODAL CALENDARIO MENSUAL -->
+  <div class="modal fade" id="modalCumpleMensual" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-success fw-bold id="tituloModalMes">🗓️ Calendario Mensual de Cumpleaños</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-white">
+          <div id="gridCalendarioMensual" class="mb-4"></div>
+          <hr class="border-secondary">
+          <h6 class="text-gold fw-bold mb-3">🎂 Cumpleañeros de este Mes:</h6>
+          <div id="listaCumpleanosMesModal" class="row g-2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CALENDARIO ANUAL -->
+  <div class="modal fade" id="modalCumpleAnual" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-gold fw-bold">🎂 Calendario Anual de Cumpleaños</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-white">
+          <div class="row g-3" id="gridCalendarioAnual"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <!-- 7. ZONA DE AGENDA Y VISITAS (Basado en tu segundo boceto) -->
     <div class="row g-4 mb-4">
