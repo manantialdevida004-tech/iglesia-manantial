@@ -225,7 +225,7 @@ function mostrarCumpleDestacado(index) {
 }
 
 /* =========================================================
-   GENERACIÓN DE CALENDARIO ANUAL EN PDF (CORREGIDO Y VISIBLE)
+   GENERACIÓN DE CALENDARIO ANUAL EN PDF (ESTABLE Y DEFINITIVO)
    ========================================================= */
 
 function generarPDFCalendarioAnual(data) {
@@ -238,29 +238,12 @@ function generarPDFCalendarioAnual(data) {
     "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
   ];
 
-  // Contenedor temporal integrado al DOM pero invisible para garantizar renderizado correcto
-  const contenedorTemp = document.createElement("div");
-  contenedorTemp.id = "pdf-calendario-render";
-  contenedorTemp.style.position = "absolute";
-  contenedorTemp.style.top = "0";
-  contenedorTemp.style.left = "0";
-  contenedorTemp.style.width = "794px";
-  contenedorTemp.style.padding = "30px";
-  contenedorTemp.style.backgroundColor = "#ffffff";
-  contenedorTemp.style.color = "#000000";
-  contenedorTemp.style.fontFamily = "Arial, sans-serif";
-  contenedorTemp.style.zIndex = "-1000";
-  contenedorTemp.style.opacity = "0";
-  contenedorTemp.style.pointerEvents = "none";
+  const gridContainer = document.getElementById("gridMesesPDF");
+  if (!gridContainer) {
+    return alert("No se encontró el contenedor del calendario en el HTML.");
+  }
 
-  let htmlContenido = `
-    <div style="text-align: center; margin-bottom: 25px; border-bottom: 4px solid #cbb281; padding-bottom: 12px;">
-      <h1 style="color: #102a45; font-size: 26px; margin: 0; text-transform: uppercase; letter-spacing: 2px;">CALENDARIO DE CUMPLEAÑOS</h1>
-      <h3 style="color: #cbb281; font-size: 15px; margin: 5px 0 0 0;">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Ver.</h3>
-    </div>
-
-    <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between;">
-  `;
+  let htmlMeses = "";
 
   nombresMeses.forEach((mesNombre, indexMes) => {
     const numMes = indexMes + 1;
@@ -276,62 +259,57 @@ function generarPDFCalendarioAnual(data) {
       return diaA - diaB;
     });
 
-    htmlContenido += `
-      <div style="width: 23.5%; min-height: 130px; border: 2px solid #102a45; border-radius: 8px; background: #ffffff; box-sizing: border-box; margin-bottom: 10px; overflow: hidden;">
-        <div style="background-color: #102a45; color: #cbb281; text-align: center; font-weight: bold; font-size: 11px; padding: 5px; letter-spacing: 1px;">
+    htmlMeses += `
+      <div style="width: 23.5%; min-height: 150px; border: 2px solid #102a45; border-radius: 10px; background: #ffffff; box-sizing: border-box; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div style="background-color: #102a45; color: #cbb281; text-align: center; font-weight: bold; font-size: 13px; padding: 8px; letter-spacing: 1px;">
           ${mesNombre}
         </div>
-        <div style="padding: 6px;">
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 10px;">
+        <div style="padding: 8px;">
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px;">
     `;
 
     if (cumpleMes.length === 0) {
-      htmlContenido += `<li style="color: #888; text-align: center; font-style: italic; padding: 12px 0;">Sin registros</li>`;
+      htmlMeses += `<li style="color: #aaa; text-align: center; font-style: italic; padding: 15px 0;">Sin registros</li>`;
     } else {
       cumpleMes.forEach(c => {
         const dia = c.fecha_nacimiento.split("-")[2];
-        htmlContenido += `
-          <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #eee; padding: 3px 0;">
-            <span style="font-weight: 600; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 115px;" title="${c.nombre_completo}">${c.nombre_completo}</span>
-            <span style="background: #e6f4ea; color: #137333; font-weight: bold; padding: 1px 4px; border-radius: 4px; font-size: 9px;">Día ${dia}</span>
+        htmlMeses += `
+          <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #eee; padding: 4px 0;">
+            <span style="font-weight: 600; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="${c.nombre_completo}">${c.nombre_completo}</span>
+            <span style="background: #e6f4ea; color: #137333; font-weight: bold; padding: 2px 5px; border-radius: 4px; font-size: 10px;">Día ${dia}</span>
           </li>
         `;
       });
     }
 
-    htmlContenido += `
+    htmlMeses += `
           </ul>
         </div>
       </div>
     `;
   });
 
-  htmlContenido += `
-    </div>
-    <div style="text-align: center; margin-top: 15px; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 8px;">
-      Reporte sincronizado automáticamente desde Supabase 🕊️
-    </div>
-  `;
+  gridContainer.innerHTML = htmlMeses;
 
-  contenedorTemp.innerHTML = htmlContenido;
-  document.body.appendChild(contenedorTemp);
+  const elementoPDF = document.getElementById("printCalendarioAnual");
+  elementoPDF.style.display = "block";
 
   const opciones = {
     margin:        5,
     filename:      'Calendario_Anual_Cumpleanos_Manantial.pdf',
     image:         { type: 'jpeg', quality: 0.98 },
-    html2canvas:   { scale: 2, useCORS: true, logging: true },
+    html2canvas:   { scale: 2, useCORS: true, logging: false },
     jsPDF:         { unit: 'mm', format: 'a4', orientation: 'landscape' }
   };
 
-  html2pdf().from(contenedorTemp).set(opciones).save().then(() => {
-    const el = document.getElementById("pdf-calendario-render");
-    if (el) el.remove();
-  }).catch(err => {
-    console.error("Error al generar PDF:", err);
-    const el = document.getElementById("pdf-calendario-render");
-    if (el) el.remove();
-  });
+  setTimeout(() => {
+    html2pdf().from(elementoPDF).set(opciones).save().then(() => {
+      elementoPDF.style.display = "none";
+    }).catch(err => {
+      console.error("Error al generar PDF:", err);
+      elementoPDF.style.display = "none";
+    });
+  }, 400);
 }
 
 /* =========================================================
