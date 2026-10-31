@@ -4,7 +4,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
 let registrosGlobales = [];
 let miGrafica = null;
 let indiceCumpleActual = 0;
-let listaCumpleMesGlobal = [];
+let listaCumpleanosOrdenados = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem("adminLogueado") !== "true") {
@@ -36,16 +36,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Botones de navegación de cumpleañeros
+  // Navegación entre cumpleañeros próximos
   document.getElementById("btnProximoCumple").addEventListener("click", () => {
-    if (listaCumpleMesGlobal.length === 0) return;
-    indiceCumpleActual = (indiceCumpleActual + 1) % listaCumpleMesGlobal.length;
+    if (listaCumpleanosOrdenados.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual + 1) % listaCumpleanosOrdenados.length;
     mostrarCumpleDestacado(indiceCumpleActual);
   });
 
   document.getElementById("btnAnteriorCumple").addEventListener("click", () => {
-    if (listaCumpleMesGlobal.length === 0) return;
-    indiceCumpleActual = (indiceCumpleActual - 1 + listaCumpleMesGlobal.length) % listaCumpleMesGlobal.length;
+    if (listaCumpleanosOrdenados.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual - 1 + listaCumpleanosOrdenados.length) % listaCumpleanosOrdenados.length;
     mostrarCumpleDestacado(indiceCumpleActual);
   });
 
@@ -117,7 +117,11 @@ async function cargarRegistrosAdmin() {
     actualizarKPIs(registrosGlobales);
     renderizarTarjetas(registrosGlobales);
     generarGrafica(registrosGlobales);
+    
+    // Procesamiento dinámico de cumpleaños
     procesarCumpleanosCongregacion(registrosGlobales);
+    renderizarCalendarioMensual(registrosGlobales);
+    renderizarCalendarioAnual(registrosGlobales);
 
   } catch (err) {
     console.error("Error:", err);
@@ -136,6 +140,250 @@ function actualizarKPIs(data) {
   }).length;
   document.getElementById("kpiCumple").textContent = cumpleMes;
 }
+
+/* =========================================================
+   SISTEMA DE CUMPLEAÑOS DINÁMICO (PRÓXIMO, MENSUAL Y ANUAL)
+   ========================================================= */
+
+function procesarCumpleanosCongregacion(data) {
+  const hoy = new Date();
+  const anioActual = hoy.getFullYear();
+
+  const validos = data.filter(r => r.fecha_nacimiento && r.fecha_nacimiento.includes("-"));
+
+  // Calcular la fecha del próximo cumpleaños de cada persona
+  const procesados = validos.map(person => {
+    const parts = person.fecha_nacimiento.split("-");
+    const mes = parseInt(parts[1], 10) - 1;
+    const dia = parseInt(parts[2], 10);
+
+    let proximoCumple = new Date(anioActual, mes, dia);
+    
+    // Ajustar si el cumpleaños de este año ya transcurrió
+    if (proximoCumple < new Date(anioActual, hoy.getMonth(), hoy.getDate())) {
+      proximoCumple = new Date(anioActual + 1, mes, dia);
+    }
+
+    const diffTiempo = proximoCumple - new Date(anioActual, hoy.getMonth(), hoy.getDate());
+    const diasFaltantes = Math.ceil(diffTiempo / (1000 * 60 * 60 * 24));
+
+    return {
+      ...person,
+      proximoCumple,
+      diasFaltantes,
+      diaNac: dia,
+      mesNac: mes + 1
+    };
+  });
+
+  // Ordenar de menor a mayor días faltantes
+  listaCumpleanosOrdenados = procesados.sort((a, b) => a.diasFaltantes - b.diasFaltantes);
+
+  if (listaCumpleanosOrdenados.length > 0) {
+    indiceCumpleActual = 0;
+    mostrarCumpleDestacado(indiceCumpleActual);
+  } else {
+    document.getElementById("cumpleDestacadoContainer").innerHTML = `<p class="text-white-50">No hay fechas de nacimiento registradas.</p>`;
+  }
+}
+
+function mostrarCumpleDestacado(index) {
+  const persona = listaCumpleanosOrdenados[index];
+  if (!persona) return;
+
+  const foto = persona.foto_url && persona.foto_url.trim() !== "" ? persona.foto_url : "https://via.placeholder.com/100?text=Foto";
+  const container = document.getElementById("cumpleDestacadoContainer");
+  const btnWsp = document.getElementById("btnEnviarMensajeCumple");
+  const badge = document.getElementById("badgeDiasRestantes");
+
+  if (persona.diasFaltantes === 0) {
+    badge.textContent = "🎂 ¡ES HOY!";
+    badge.className = "badge bg-danger text-white fs-6 animate-pulse";
+  } else if (persona.diasFaltantes === 1) {
+    badge.textContent = "🎈 Mañana";
+    badge.className = "badge bg-warning text-dark fs-6";
+  } else {
+    badge.textContent = `En ${persona.diasFaltantes} días`;
+    badge.className = "badge bg-success text-dark fs-6";
+  }
+
+  container.innerHTML = `
+    <img src="${foto}" class="rounded-circle border border-success shadow" width="75" height="75" style="object-fit: cover;">
+    <div>
+      <h5 class="text-white mb-1 fw-bold">${persona.nombre_completo}</h5>
+      <p class="text-success small mb-0">🎂 Cumpleaños: <b>${persona.fecha_nacimiento}</b></p>
+      <small class="text-white-50">Sección: ${persona.seccion || 'General'}</small>
+    </div>
+  `;
+
+  if (persona.telefono) {
+    const telLimpio = persona.telefono.replace(/\D/g, '');
+    btnWsp.href = `https://wa.me/521${telLimpio}?text=¡Hola%20${encodeURIComponent(persona.nombre_completo)}!%20Te%20enviamos%20un%20caluroso%20saludo%20y%20bendiciones%20de%20parte%20de%20la%20Iglesia%20Manantial%20de%20Vida%20por%20tu%20próximo%20cumpleaños.`;
+    btnWsp.style.display = "inline-block";
+  } else {
+    btnWsp.style.display = "none";
+  }
+}
+
+/* =========================================================
+   GENERACIÓN DE CALENDARIO MENSUAL
+   ========================================================= */
+
+function renderizarCalendarioMensual(data) {
+  const hoy = new Date();
+  const mesActual = hoy.getMonth();
+  const anioActual = hoy.getFullYear();
+  const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+  document.getElementById("tituloModalMes").textContent = `🗓️ Calendario de ${nombresMeses[mesActual]} ${anioActual}`;
+
+  // Obtener cumpleañeros del mes actual
+  const cumpleaniosMes = data.filter(r => {
+    if (!r.fecha_nacimiento) return false;
+    return parseInt(r.fecha_nacimiento.split("-")[1], 10) === (mesActual + 1);
+  });
+
+  // Mapear días que tienen cumpleaños
+  const diasConCumple = {};
+  cumpleaniosMes.forEach(c => {
+    const dia = parseInt(c.fecha_nacimiento.split("-")[2], 10);
+    if (!diasConCumple[dia]) diasConCumple[dia] = [];
+    diasConCumple[dia].push(c);
+  });
+
+  // Construir matriz de días
+  const primerDiaSemana = new Date(anioActual, mesActual, 1).getDay(); // 0: Dom
+  const totalDiasMes = new Date(anioActual, mesActual + 1, 0).getDate();
+
+  let html = `
+    <div class="table-responsive">
+      <table class="table table-bordered border-secondary text-center text-white mb-0">
+        <thead>
+          <tr class="table-dark text-warning">
+            <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
+          </tr>
+        </thead>
+        <tbody><tr>
+  `;
+
+  let celdaCount = 0;
+
+  // Espacios vacíos antes del día 1
+  for (let i = 0; i < primerDiaSemana; i++) {
+    html += `<td class="bg-dark text-muted opacity-25"></td>`;
+    celdaCount++;
+  }
+
+  // Días del mes
+  for (let d = 1; d <= totalDiasMes; d++) {
+    if (celdaCount % 7 === 0 && celdaCount > 0) {
+      html += `</tr><tr>`;
+    }
+
+    const tieneCumple = diasConCumple[d];
+    const esHoy = d === hoy.getDate();
+    let bgClass = "";
+    
+    if (esHoy) bgClass = "bg-primary text-white fw-bold";
+    else if (tieneCumple) bgClass = "bg-success text-dark fw-bold";
+
+    html += `
+      <td class="${bgClass} position-relative py-3" style="min-width: 45px;">
+        ${d}
+        ${tieneCumple ? `<br><small style="font-size: 0.65rem;">🎂 (${tieneCumple.length})</small>` : ''}
+      </td>
+    `;
+    celdaCount++;
+  }
+
+  // Rellenar espacios restantes del final
+  while (celdaCount % 7 !== 0) {
+    html += `<td class="bg-dark text-muted opacity-25"></td>`;
+    celdaCount++;
+  }
+
+  html += `</tr></tbody></table></div>`;
+  document.getElementById("gridCalendarioMensual").innerHTML = html;
+
+  // Renderizar la lista detallada de cumpleañeros del mes en el modal
+  const contenedorLista = document.getElementById("listaCumpleanosMesModal");
+  if (cumpleaniosMes.length === 0) {
+    contenedorLista.innerHTML = `<p class="text-white-50 small">No hay cumpleaños registrados para este mes.</p>`;
+  } else {
+    let listaHtml = "";
+    cumpleaniosMes.sort((a,b) => parseInt(a.fecha_nacimiento.split("-")[2]) - parseInt(b.fecha_nacimiento.split("-")[2]))
+                  .forEach(c => {
+      const dia = c.fecha_nacimiento.split("-")[2];
+      listaHtml += `
+        <div class="col-md-6">
+          <div class="p-2 bg-black rounded border border-secondary d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-white fw-bold">${c.nombre_completo}</span>
+              <br><small class="text-white-50">${c.seccion || 'General'}</small>
+            </div>
+            <span class="badge bg-success text-dark">Día ${dia}</span>
+          </div>
+        </div>
+      `;
+    });
+    contenedorLista.innerHTML = listaHtml;
+  }
+}
+
+/* =========================================================
+   GENERACIÓN DE CALENDARIO ANUAL
+   ========================================================= */
+
+function renderizarCalendarioAnual(data) {
+  const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const contenedor = document.getElementById("gridCalendarioAnual");
+  let html = "";
+
+  nombresMeses.forEach((mesNombre, indexMes) => {
+    const numMes = indexMes + 1;
+    const cumpleaniosDelMes = data.filter(r => {
+      if (!r.fecha_nacimiento) return false;
+      return parseInt(r.fecha_nacimiento.split("-")[1], 10) === numMes;
+    });
+
+    html += `
+      <div class="col-md-4 col-sm-6">
+        <div class="card bg-black border-secondary p-3 h-100">
+          <h6 class="text-gold fw-bold border-bottom border-secondary pb-2 mb-2 d-flex justify-content-between">
+            <span>${mesNombre}</span>
+            <span class="badge bg-secondary">${cumpleaniosDelMes.length}</span>
+          </h6>
+          <div class="small" style="max-height: 140px; overflow-y: auto;">
+    `;
+
+    if (cumpleaniosDelMes.length === 0) {
+      html += `<p class="text-white-50 mb-0 style="font-size: 0.75rem;">Sin registros</p>`;
+    } else {
+      cumpleaniosDelMes.sort((a,b) => parseInt(a.fecha_nacimiento.split("-")[2]) - parseInt(b.fecha_nacimiento.split("-")[2]))
+                       .forEach(c => {
+        const dia = c.fecha_nacimiento.split("-")[2];
+        html += `
+          <div class="d-flex justify-content-between text-white border-bottom border-dark py-1">
+            <span class="text-truncate" style="max-width: 140px;">${c.nombre_completo}</span>
+            <span class="text-success fw-bold">${dia}</span>
+          </div>
+        `;
+      });
+    }
+
+    html += `
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  contenedor.innerHTML = html;
+}
+
+/* =========================================================
+   FUNCIONES DE SOPORTE GENERAL (MANTENIDAS)
+   ========================================================= */
 
 function renderizarTarjetas(data) {
   const contenedor = document.getElementById("listaTarjetas");
@@ -230,61 +478,6 @@ function generarGrafica(data) {
       }
     }
   });
-}
-
-function procesarCumpleanosCongregacion(data) {
-  const mesActual = new Date().getMonth() + 1;
-  listaCumpleMesGlobal = data.filter(r => {
-    if (!r.fecha_nacimiento) return false;
-    return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mesActual;
-  });
-
-  if (listaCumpleMesGlobal.length > 0) {
-    indiceCumpleActual = 0;
-    mostrarCumpleDestacado(indiceCumpleActual);
-  } else {
-    document.getElementById("cumpleDestacadoContainer").innerHTML = `<p class="text-white-50">No hay cumpleañeros registrados este mes.</p>`;
-  }
-
-  // Llenar modal general de cumpleaños
-  const contenedorModal = document.getElementById("listaCumpleanosModal");
-  if (contenedorModal) {
-    let html = `<h6 class="text-success">🎈 Cumpleañeros del Mes (${listaCumpleMesGlobal.length}):</h6>`;
-    if (listaCumpleMesGlobal.length > 0) {
-      listaCumpleMesGlobal.forEach(c => {
-        html += `<p class="mb-1 text-white">🎂 <b>${c.nombre_completo}</b> - ${c.fecha_nacimiento}</p>`;
-      });
-    } else {
-      html += `<p class="text-white-50 small">Ninguno este mes.</p>`;
-    }
-    contenedorModal.innerHTML = html;
-  }
-}
-
-function mostrarCumpleDestacado(index) {
-  const persona = listaCumpleMesGlobal[index];
-  if (!persona) return;
-
-  const foto = persona.foto_url || "https://via.placeholder.com/100?text=Foto";
-  const container = document.getElementById("cumpleDestacadoContainer");
-  const btnWsp = document.getElementById("btnEnviarMensajeCumple");
-
-  container.innerHTML = `
-    <img src="${foto}" class="rounded-circle border border-success" width="70" height="70" style="object-fit: cover;">
-    <div>
-      <h5 class="text-white mb-1">${persona.nombre_completo}</h5>
-      <p class="text-success small mb-0">🎉 Cumpleaños: <b>${persona.fecha_nacimiento}</b></p>
-      <small class="text-white-50">Sección: ${persona.seccion}</small>
-    </div>
-  `;
-
-  if (persona.telefono) {
-    const telLimpio = persona.telefono.replace(/\D/g, '');
-    btnWsp.href = `https://wa.me/521${telLimpio}?text=¡Feliz%20cumpleaños%20${encodeURIComponent(persona.nombre_completo)}!%20La%20Iglesia%20Manantial%20de%20Vida%20te%20envía%20una%20gran%20bendición%20en%20tu%20día.`;
-    btnWsp.style.display = "inline-block";
-  } else {
-    btnWsp.style.display = "none";
-  }
 }
 
 async function supabaseInsertarVisita(dataObj) {
