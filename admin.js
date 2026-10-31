@@ -225,7 +225,7 @@ function mostrarCumpleDestacado(index) {
 }
 
 /* =========================================================
-   GENERACIÓN DE CALENDARIO ANUAL EN PDF
+   GENERACIÓN DE CALENDARIO ANUAL EN PDF (CORREGIDO PARA IMPRESIÓN)
    ========================================================= */
 
 function generarPDFCalendarioAnual(data) {
@@ -234,37 +234,39 @@ function generarPDFCalendarioAnual(data) {
   }
 
   const nombresMeses = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", 
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", 
+    "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
   ];
 
-  // Crear un contenedor temporal oculto formateado exclusivamente para impresión PDF
+  // Contenedor accesible en DOM posicionado fuera de pantalla (evita PDFs en blanco)
   const contenedorTemp = document.createElement("div");
-  contenedorTemp.style.padding = "20px";
-  contenedorTemp.style.backgroundColor = "#ffffff";
-  contenedorTemp.style.color = "#000000";
-  contenedorTemp.style.fontFamily = "Arial, sans-serif";
-  contenedorTemp.style.width = "750px";
+  contenedorTemp.id = "pdf-temporizador-render";
+  contenedorTemp.style.position = "absolute";
+  contenedorTemp.style.left = "-9999px";
+  contenedorTemp.style.top = "0";
+  contenedorTemp.style.width = "794px";
+  contenedorTemp.style.padding = "25px";
+  contenedorTemp.style.backgroundColor = "#fffdf9";
+  contenedorTemp.style.color = "#222222";
+  contenedorTemp.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
 
   let htmlContenido = `
-    <div style="text-align: center; border-bottom: 3px solid #cbb281; padding-bottom: 10px; margin-bottom: 20px;">
-      <h2 style="color: #102a45; margin: 0; font-size: 24px;">Iglesia Cristiana Manantial de Vida</h2>
-      <h3 style="color: #cbb281; margin: 5px 0; font-size: 18px;">Calendario Anual de Cumpleaños</h3>
-      <p style="font-size: 11px; color: #555; margin: 0;">San Andrés Tuxtla, Veracruz • Reporte Oficial</p>
+    <div style="text-align: center; margin-bottom: 20px; border-bottom: 4px solid #cbb281; padding-bottom: 12px;">
+      <h1 style="color: #102a45; font-size: 26px; margin: 0; text-transform: uppercase; letter-spacing: 2px;">CALENDARIO DE CUMPLEAÑOS</h1>
+      <h3 style="color: #cbb281; font-size: 15px; margin: 5px 0 0 0;">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Ver.</h3>
     </div>
+
     <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;">
   `;
 
   nombresMeses.forEach((mesNombre, indexMes) => {
     const numMes = indexMes + 1;
     
-    // Filtrar cumpleañeros del mes
     const cumpleMes = data.filter(r => {
       if (!r.fecha_nacimiento) return false;
       return parseInt(r.fecha_nacimiento.split("-")[1], 10) === numMes;
     });
 
-    // Ordenar por el día de nacimiento
     cumpleMes.sort((a, b) => {
       const diaA = parseInt(a.fecha_nacimiento.split("-")[2], 10);
       const diaB = parseInt(b.fecha_nacimiento.split("-")[2], 10);
@@ -272,48 +274,53 @@ function generarPDFCalendarioAnual(data) {
     });
 
     htmlContenido += `
-      <div style="width: 48%; border: 1px solid #ddd; border-radius: 6px; padding: 8px; margin-bottom: 8px; box-sizing: border-box; background: #fafafa;">
-        <h4 style="background: #102a45; color: #cbb281; margin: -8px -8px 6px -8px; padding: 6px 10px; font-size: 13px; border-top-left-radius: 5px; border-top-right-radius: 5px; display: flex; justify-content: space-between;">
-          <span>${mesNombre}</span>
-          <span style="font-size: 11px; opacity: 0.8;">(${cumpleMes.length})</span>
-        </h4>
-        <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px;">
+      <div style="width: 23.5%; min-height: 135px; border: 2px solid #102a45; border-radius: 8px; background: #ffffff; box-sizing: border-box; margin-bottom: 10px; overflow: hidden;">
+        <div style="background-color: #102a45; color: #cbb281; text-align: center; font-weight: bold; font-size: 11px; padding: 5px; letter-spacing: 1px;">
+          ${mesNombre}
+        </div>
+        <div style="padding: 6px;">
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 10px;">
     `;
 
     if (cumpleMes.length === 0) {
-      htmlContenido += `<li style="color: #999; font-style: italic; padding: 2px 0;">Sin cumpleaños registrados</li>`;
+      htmlContenido += `<li style="color: #aaa; text-align: center; font-style: italic; padding: 12px 0;">Sin registros</li>`;
     } else {
       cumpleMes.forEach(c => {
         const dia = c.fecha_nacimiento.split("-")[2];
         htmlContenido += `
-          <li style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding: 3px 0;">
-            <span style="font-weight: bold; color: #222;">${c.nombre_completo}</span>
-            <span style="color: #0b6623; font-weight: bold;">Día ${dia}</span>
+          <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #eee; padding: 3px 0;">
+            <span style="font-weight: 600; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 115px;" title="${c.nombre_completo}">${c.nombre_completo}</span>
+            <span style="background: #e6f4ea; color: #137333; font-weight: bold; padding: 1px 4px; border-radius: 4px; font-size: 9px;">Día ${dia}</span>
           </li>
         `;
       });
     }
 
     htmlContenido += `
-        </ul>
+          </ul>
+        </div>
       </div>
     `;
   });
 
-  htmlContenido += `</div>`;
+  htmlContenido += `
+    </div>
+    <div style="text-align: center; margin-top: 15px; font-size: 9px; color: #666; border-top: 1px solid #ddd; padding-top: 8px;">
+      Reporte sincronizado en tiempo real con Supabase 🕊️
+    </div>
+  `;
+
   contenedorTemp.innerHTML = htmlContenido;
   document.body.appendChild(contenedorTemp);
 
-  // Configuración de html2pdf
   const opciones = {
-    margin:        8,
+    margin:        5,
     filename:      'Calendario_Anual_Cumpleanos_Manantial.pdf',
     image:         { type: 'jpeg', quality: 0.98 },
-    html2canvas:   { scale: 2, useCORS: true },
-    jsPDF:         { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    html2canvas:   { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF:         { unit: 'mm', format: 'a4', orientation: 'landscape' }
   };
 
-  // Renderizar PDF y remover elemento temporal
   html2pdf().from(contenedorTemp).set(opciones).save().then(() => {
     document.body.removeChild(contenedorTemp);
   });
