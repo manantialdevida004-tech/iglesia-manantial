@@ -3,254 +3,340 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Iglesia Cristiana Manantial de Vida</title>
+  <title>Admin Dashboard - Manantial de Vida</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js para gráficas -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       background-color: #080c14;
-      color: #f1f5f9;
+      color: #f8fafc;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       overflow-x: hidden;
     }
 
+    /* Encabezado fijo superior */
     .navbar-custom {
       background-color: #0f172a !important;
       border-bottom: 2px solid #1e3a8a;
+      position: sticky;
+      top: 0;
+      z-index: 1030;
     }
 
-    /* Tarjetas de Próximos Eventos */
-    .card-evento {
-      background-color: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 12px;
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      height: 100%;
+    h1, h2, h3, h4, h5, h6, label, p, span, small {
+      color: #f8fafc !important;
     }
-    .card-evento:hover {
-      transform: translateY(-5px);
+    .text-gold {
+      color: #cbb281 !important;
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-in-up;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tarjetas KPI */
+    .card-kpi {
+      background-color: #111827;
+      border: 1px solid #374151;
+      border-top: 4px solid #cbb281;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    .card-kpi:hover {
+      transform: translateY(-3px);
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
-    .card-evento img {
-      width: 100%;
-      height: auto;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
+
+    /* Tarjetas Directorio */
+    .card-preview {
+      background-color: #111827;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .card-preview:hover {
+      border-color: #cbb281;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.25);
     }
 
-    /* Carruseles con proporción rectangular exacta adaptable a celulares */
-    .carousel-custom {
-      background-color: #000000;
-      border-radius: 1rem;
+    /* Controles y campos */
+    .form-control, .form-select {
+      background-color: #0f172a;
+      border: 1px solid #4b5563;
+      color: #ffffff;
+      border-radius: 8px;
     }
-    
-    .carousel-custom img {
-      width: 100%;
-      height: auto;
-      max-height: 500px;
-      aspect-ratio: 16 / 9;
-      object-fit: contain;
-      margin: 0 auto;
+    .form-control:focus, .form-select:focus {
+      background-color: #0f172a;
+      border-color: #cbb281;
+      color: #ffffff;
+      box-shadow: 0 0 0 0.25rem rgba(203, 178, 129, 0.25);
     }
-
-    .section-title {
-      color: #cbb281;
-      font-weight: 700;
-      text-align: center;
-      margin-bottom: 25px;
+    .form-control::placeholder {
+      color: #9ca3af;
     }
 
-    .btn-registro {
+    /* Botones temáticos */
+    .btn-kraft {
       background-color: #cbb281;
       color: #080c14;
       font-weight: bold;
-      padding: 12px 24px;
       border-radius: 8px;
-      text-decoration: none;
-      display: inline-block;
+      border: none;
       transition: all 0.3s ease;
     }
-    .btn-registro:hover {
+    .btn-kraft:hover {
       background-color: #b39762;
       color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    /* Zona de Cumpleaños Destacado */
+    .card-cumple-destacado {
+      background-color: #111827;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      border-left: 5px solid #10b981;
     }
   </style>
 </head>
 <body>
 
-  <!-- 1. ENCABEZADO / NAVBAR RESPONSIVO -->
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top py-3">
+  <!-- 1. ENCABEZADO FIJO SUPERIOR -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 shadow">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
         <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
-        <span style="color: #cbb281; font-size: 1.1rem;">Manantial de Vida</span>
-      </a>
-      <button class="navbar-toggler border-0 text-warning" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-        <div class="navbar-nav gap-2 mt-2 mt-lg-0">
-          <a class="btn btn-outline-warning btn-sm px-3" href="index.html">Inicio</a>
-          <a class="btn btn-outline-light btn-sm px-3" href="registro.html">Registro</a>
-          <a class="btn btn-outline-light btn-sm px-3" href="admin.html">Admin</a>
-          <a class="btn btn-outline-light btn-sm px-3" href="pastor.html">Pastor</a>
+        <div>
+          <span class="text-gold fs-6 d-block">Manantial de Vida</span>
+          <small class="text-white-50" style="font-size: 0.75rem;">Panel Administrativo</small>
         </div>
+      </a>
+      <div class="ms-auto d-flex gap-2">
+        <a class="btn btn-outline-light btn-sm px-3" href="index.html">🏠 Volver al Inicio</a>
+        <button id="btnCerrarSesion" class="btn btn-outline-danger btn-sm px-3">🚪 Cerrar Sesión</button>
       </div>
     </div>
   </nav>
 
-  <!-- 2. TÍTULO PRINCIPAL -->
-  <div class="container text-center my-4">
-    <h1 class="fw-bold fs-3 fs-md-2" style="color: #ffffff;">Iglesia Cristiana <span style="color: #cbb281;">Manantial de Vida</span></h1>
-  </div>
+  <div class="container my-4 fade-in-up">
 
-  <!-- 3. CARRUSEL 1 -->
-  <div class="container mb-5">
-    <h3 class="section-title fs-4">Actividades y Eventos</h3>
-    <div id="carruselUno" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
-      <div class="carousel-indicators">
-        <button type="button" data-bs-target="#carruselUno" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#carruselUno" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#carruselUno" data-bs-slide-to="2"></button>
-      </div>
-      <div class="carousel-inner">
-        <div class="carousel-item active">
-          <img src="carrusel1/img1.jpeg" class="d-block w-100 img-fluid" alt="Actividad 1" onerror="this.src='carrusel1/img1.jpg'">
-        </div>
-        <div class="carousel-item">
-          <img src="carrusel1/img2.jpeg" class="d-block w-100 img-fluid" alt="Actividad 2" onerror="this.src='carrusel1/img2.jpg'">
-        </div>
-        <div class="carousel-item">
-          <img src="carrusel1/img3.jpeg" class="d-block w-100 img-fluid" alt="Actividad 3" onerror="this.src='carrusel1/img3.jpg'">
+    <!-- CONTENEDOR DE ALERTAS -->
+    <div id="adminAlertas"></div>
+
+    <!-- 2. ZONA DE DASHBOARD (KPIs) -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Total Registrados</small>
+          <h2 id="kpiTotal" class="fw-bold text-white mt-2">0</h2>
         </div>
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#carruselUno" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carruselUno" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Congregantes</small>
+          <h2 id="kpiCongregantes" class="fw-bold text-gold mt-2">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Jóvenes / Niños</small>
+          <h2 id="kpiJovenes" class="fw-bold text-info mt-2">0</h2>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card card-kpi p-3 text-center">
+          <small class="text-white-50 text-uppercase fw-bold">Cumpleaños Mes</small>
+          <h2 id="kpiCumple" class="fw-bold text-success mt-2">0</h2>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- 4 y 5. SECCIÓN PRÓXIMOS EVENTOS -->
-  <div class="container mb-5">
-    <h3 class="section-title fs-4">Próximos Eventos</h3>
-    
+    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN -->
     <div class="row g-4 mb-4">
-      <div class="col-md-6 col-12">
-        <div class="card-evento">
-          <img src="eventos/culto_general.jpeg" alt="Culto General" class="img-fluid" onerror="this.src='eventos/culto_general.jpg'">
-          <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1 fs-5">Culto General</h5>
-            <p class="text-warning mb-0 small">10:30 AM • Próximo Domingo</p>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6 col-12">
-        <div class="card-evento">
-          <img src="eventos/jovenes.jpeg" alt="Culto de Jóvenes" class="img-fluid" onerror="this.src='eventos/jovenes.jpg'">
-          <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1 fs-5">Culto de Jóvenes</h5>
-            <p class="text-warning mb-0 small">5:00 PM • Próximo Domingo</p>
+      <div class="col-lg-12">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
+          <h5 class="fw-bold text-gold mb-3">📊 Gráfica de Distribución por Secciones</h5>
+          <div style="position: relative; height: 260px; width: 100%;">
+            <canvas id="graficaSecciones"></canvas>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="row g-4">
-      <div class="col-md-6 col-12">
-        <div class="card-evento">
-          <img src="eventos/reunion_oracion.jpeg" alt="Martes de Oración" class="img-fluid" onerror="this.src='eventos/reunion_oracion.jpg'">
-          <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1 fs-5">Martes de Oración</h5>
-            <p class="text-warning mb-0 small">7:00 PM • Próximo Martes</p>
+    <!-- 4. ZONA DE BUSCADOR, ATAJOS Y DESCARGAS -->
+    <div class="row g-3 mb-4 align-items-center">
+      <div class="col-lg-6">
+        <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
+      </div>
+      <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end flex-wrap">
+        <button class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAgenda">📅 Agendas y Visitas</button>
+        <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel</button>
+        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF Reporte</button>
+      </div>
+    </div>
+
+    <!-- 5. DIRECTORIO DE CONGREGANTES -->
+    <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-5">
+      <h4 class="fw-bold text-gold mb-3">📋 Directorio de Congregantes (Haz clic para ver detalles)</h4>
+      <div id="listaTarjetas" class="row g-3">
+        <p class="text-white-50 text-center py-3">Cargando registros...</p>
+      </div>
+    </div>
+
+    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
+    <div class="row g-4 mb-5">
+      <!-- Columna Izquierda: Vista Previa del Próximo Cumpleañero -->
+      <div class="col-lg-7">
+        <div class="card card-cumple-destacado p-4 shadow h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-success mb-0">🎉 Próximo Cumpleaños</h4>
+            <span class="badge bg-success text-dark fs-6" id="badgeDiasRestantes">Calculando...</span>
+          </div>
+          
+          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
+            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
+            <span class="text-white-50">Cargando datos desde Supabase...</span>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap mt-auto">
+            <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
+            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Siguiente ➡️</button>
+            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Felicitación por WhatsApp</a>
           </div>
         </div>
       </div>
-      <div class="col-md-6 col-12">
-        <div class="card-evento">
-          <img src="eventos/ninos.jpeg" alt="Clases de Niños" class="img-fluid" onerror="this.src='eventos/ninos.jpg'">
-          <div class="p-3 text-center">
-            <h5 class="fw-bold text-white mb-1 fs-5">Clases de Niños</h5>
-            <p class="text-warning mb-0 small">5:00 PM • Próximo Sábado</p>
+
+      <!-- Columna Derecha: Botón Único para Descargar PDF del Calendario Anual -->
+      <div class="col-lg-5">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center text-center">
+          <h5 class="text-gold fw-bold mb-2">📅 Calendario Anual de Cumpleaños</h5>
+          <p class="text-white-50 small mb-3">Descarga el reporte en PDF con todos los cumpleaños de la iglesia organizados mes a mes.</p>
+          <button id="btnGenerarPDFCalendario" class="btn btn-kraft w-100 py-3 fw-bold shadow">
+            📥 Descargar Calendario Anual (PDF)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. ZONA DE AGENDA Y VISITAS -->
+    <div class="row g-4 mb-4">
+      <!-- Columna Izquierda: Visitas a Congregantes -->
+      <div class="col-lg-6">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
+          <h4 class="fw-bold text-warning mb-3">🏡 Agenda de Visitas a Congregantes</h4>
+          <p class="text-white-50 small">Control de visitas pastorales domiciliarias.</p>
+          
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Visitas hoy</small>
+                <h5 id="conteoVisitasHoy" class="text-warning mb-0">0</h5>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Visitas este mes</small>
+                <h5 id="conteoVisitasMes" class="text-success mb-0">0</h5>
+              </div>
+            </div>
           </div>
+
+          <!-- Captura de Visita -->
+          <div class="p-3 bg-black rounded border border-secondary mb-3">
+            <h6 class="text-gold mb-2">Capturar Nueva Visita</h6>
+            <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante">
+            <input type="date" id="visitaFecha" class="form-control form-control-sm mb-2">
+            <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita</button>
+          </div>
+
+          <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
+          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor -->
+      <div class="col-lg-6">
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
+          <h4 class="fw-bold text-info mb-3">📖 Agenda de Eventos y Cuentos del Pastor</h4>
+          
+          <div class="p-3 bg-black rounded border border-secondary mb-3">
+            <h6 class="text-gold mb-2">Capturar Evento / Cuento</h6>
+            <input type="text" id="eventoTitulo" class="form-control form-control-sm mb-2" placeholder="Título (Ej. Reunión especial / Cuento)">
+            <input type="datetime-local" id="eventoFecha" class="form-control form-control-sm mb-2">
+            <button id="btnGuardarEvento" class="btn btn-kraft btn-sm w-100">Guardar Evento</button>
+          </div>
+
+          <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CONTENEDOR OCULTO PARA GENERAR EL PDF DEL CALENDARIO -->
+  <div id="printCalendarioAnual" style="display: none; background-color: #ffffff; color: #000000; padding: 30px; font-family: Arial, sans-serif; width: 1120px;">
+    <div style="text-align: center; margin-bottom: 25px; border-bottom: 4px solid #cbb281; padding-bottom: 15px;">
+      <h1 style="color: #102a45; font-size: 32px; margin: 0; text-transform: uppercase; letter-spacing: 2px;">CALENDARIO DE CUMPLEAÑOS</h1>
+      <h3 style="color: #cbb281; font-size: 18px; margin: 8px 0 0 0;">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Ver.</h3>
+    </div>
+    <div id="gridMesesPDF" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between;">
+      <!-- Se llena dinámicamente con JS -->
+    </div>
+    <div style="text-align: center; margin-top: 25px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px;">
+      Reporte sincronizado automáticamente desde la base de datos de la congregación 🕊️
+    </div>
+  </div>
+
+  <!-- MODAL DE DETALLE EXPANDIDO -->
+  <div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-gold fw-bold" id="modalNombreTitulo">Detalle del Registro</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-white" id="modalContenidoDetalle"></div>
+        <div class="modal-footer border-secondary">
+          <a id="btnWhatsAppModal" href="#" target="_blank" class="btn btn-success btn-sm">💬 Enviar WhatsApp Rápido</a>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 6. SECCIÓN REGISTRO (Actualizada con Video) -->
-  <div class="container mb-5">
-    <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
-      <div class="row align-items-center g-4">
-        <div class="col-md-5 col-12 text-center">
-          <video class="w-100 rounded-3 border border-secondary shadow" autoplay muted loop playsinline style="max-height: 240px; object-fit: cover;">
-            <source src="video/video_registro.mp4" type="video/mp4">
-            Tu navegador no soporta videos HTML5.
-          </video>
+  <!-- MODAL DE AGENDA Y VISITAS RÁPIDO -->
+  <div class="modal fade" id="modalAgenda" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="text-warning fw-bold">📅 Acceso Rápido a Agendas</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="col-md-7 col-12 text-center text-md-start">
-          <h3 class="fw-bold fs-4" style="color: #cbb281;">Registro de Congregantes</h3>
-          <p class="text-secondary small">
-            Mantén tus datos actualizados para formar parte activa de las actividades, visitas pastorales y eventos especiales de nuestra congregación.
-          </p>
-          <a href="registro.html" class="btn-registro mt-2">Ir al Registro ➔</a>
+        <div class="modal-body text-white text-center">
+          <p>Utiliza los formularios interactivos de visitas y eventos distribuidos en el panel principal para una gestión más ágil.</p>
+          <button type="button" class="btn btn-kraft btn-sm" data-bs-dismiss="modal">Entendido</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 7. CARRUSEL 2 -->
-  <div class="container mb-5">
-    <h3 class="section-title fs-4">Galería de Actividades y Eventos</h3>
-    <div id="carruselDos" class="carousel slide carousel-custom shadow-lg rounded-4 overflow-hidden border border-secondary" data-bs-ride="carousel">
-      <div class="carousel-indicators">
-        <button type="button" data-bs-target="#carruselDos" data-bs-slide-to="0" class="active"></button>
-        <button type="button" data-bs-target="#carruselDos" data-bs-slide-to="1"></button>
-        <button type="button" data-bs-target="#carruselDos" data-bs-slide-to="2"></button>
-      </div>
-      <div class="carousel-inner">
-        <div class="carousel-item active">
-          <img src="actividades/act1.jpeg" class="d-block w-100 img-fluid" alt="Actividad 1" onerror="this.src='actividades/act1.jpg'">
-        </div>
-        <div class="carousel-item">
-          <img src="actividades/act2.jpeg" class="d-block w-100 img-fluid" alt="Actividad 2" onerror="this.src='actividades/act2.jpg'">
-        </div>
-        <div class="carousel-item">
-          <img src="actividades/act3.jpeg" class="d-block w-100 img-fluid" alt="Actividad 3" onerror="this.src='actividades/act3.jpg'">
-        </div>
-      </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#carruselDos" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carruselDos" data-bs-slide="next">
-        <span class="carousel-control-next-icon"></span>
-      </button>
-    </div>
-  </div>
-
-  <!-- 8. SECCIÓN UBICACIÓN DE LA IGLESIA -->
-  <div class="container mb-5">
-    <h3 class="section-title fs-4">Ubicación de la Iglesia</h3>
-    <p class="text-center text-muted small mb-3">📍 Primera Octavio Pérez González 1, El Cebollal, 95729 San Andrés Tuxtla, Ver.</p>
-    <div class="rounded-4 overflow-hidden border border-secondary shadow-lg ratio ratio-16x9">
-      <iframe 
-        src="https://maps.google.com/maps?q=Manantial+de+vida,+San+Andr%C3%A9s+Tuxtla,+Ver.&t=&z=19&ie=UTF8&iwloc=&output=embed" 
-        width="100%" 
-        height="100%" 
-        style="border:0;" 
-        allowfullscreen="" 
-        loading="lazy">
-      </iframe>
-    </div>
-  </div>
-
-  <footer class="text-center py-4 text-muted border-top border-secondary small" style="background-color: #04060a;">
+  <footer class="text-center py-4 text-white-50 border-top border-secondary small mt-5" style="background-color: #04060a;">
     <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz 🕊️</p>
   </footer>
 
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
