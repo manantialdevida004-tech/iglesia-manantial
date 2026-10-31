@@ -225,7 +225,7 @@ function mostrarCumpleDestacado(index) {
 }
 
 /* =========================================================
-   GENERACIÓN DE CALENDARIO ANUAL EN PDF (ESTABLE Y DISEÑO FIEL)
+   GENERACIÓN DE CALENDARIO ANUAL EN PDF (CORREGIDO Y DISEÑO FIEL)
    ========================================================= */
 
 function generarPDFCalendarioAnual(data) {
@@ -256,14 +256,14 @@ function generarPDFCalendarioAnual(data) {
   let htmlMeses = "";
 
   mesesInfo.forEach((mes) => {
-    // Filtrar cumpleañeros del mes actual respetando la fecha de nacimiento (YYYY-MM-DD)
+    // Filtrar cumpleañeros leyendo fecha_nacimiento
     const cumpleMes = data.filter(r => {
       if (!r.fecha_nacimiento) return false;
       const partes = r.fecha_nacimiento.split("-");
       return parseInt(partes[1], 10) === mes.num;
     });
 
-    // Ordenar por día del mes ascendente
+    // Ordenar por día del mes
     cumpleMes.sort((a, b) => {
       const diaA = parseInt(a.fecha_nacimiento.split("-")[2], 10);
       const diaB = parseInt(b.fecha_nacimiento.split("-")[2], 10);
@@ -271,18 +271,18 @@ function generarPDFCalendarioAnual(data) {
     });
 
     htmlMeses += `
-      <div style="width: 31%; margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-        <div style="background-color: ${mes.color}; color: #ffffff; text-align: center; font-weight: bold; font-size: 13px; padding: 6px; text-transform: uppercase; letter-spacing: 1px;">
+      <div style="width: 31%; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="background-color: ${mes.color}; color: #ffffff; text-align: center; font-weight: bold; font-size: 12px; padding: 5px; text-transform: uppercase; letter-spacing: 1px;">
           ${mes.nombre}
         </div>
-        <div style="padding: 6px; min-height: 110px;">
+        <div style="padding: 6px; min-height: 90px;">
           <table style="width: 100%; border-collapse: collapse; font-size: 10px; color: #333;">
     `;
 
     if (cumpleMes.length === 0) {
       htmlMeses += `
         <tr>
-          <td colspan="2" style="text-align: center; color: #aaa; font-style: italic; padding: 12px 0;">Sin cumpleaños</td>
+          <td colspan="2" style="text-align: center; color: #aaa; font-style: italic; padding: 10px 0;">Sin cumpleaños</td>
         </tr>
       `;
     } else {
@@ -290,10 +290,10 @@ function generarPDFCalendarioAnual(data) {
         const dia = parseInt(c.fecha_nacimiento.split("-")[2], 10);
         htmlMeses += `
           <tr style="border-bottom: 1px solid #f0f0f0;">
-            <td style="padding: 4px 2px; font-weight: 600; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
+            <td style="padding: 3px 2px; font-weight: 600; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
               ${c.nombre_completo}
             </td>
-            <td style="padding: 4px 2px; text-align: right; font-weight: bold; color: #555;">
+            <td style="padding: 3px 2px; text-align: right; font-weight: bold; color: #555;">
               ${dia}
             </td>
           </tr>
@@ -310,7 +310,7 @@ function generarPDFCalendarioAnual(data) {
 
   gridContainer.innerHTML = htmlMeses;
 
-  // Hacer visible temporalmente fuera de la pantalla (evita hojas en blanco en html2pdf)
+  // Hacer visible temporalmente fuera de pantalla para que html2canvas lo renderice sin fondo blanco
   const elementoPDF = document.getElementById("printCalendarioAnual");
   elementoPDF.style.position = "absolute";
   elementoPDF.style.left = "0px";
@@ -319,7 +319,7 @@ function generarPDFCalendarioAnual(data) {
   elementoPDF.style.display = "block";
 
   const opciones = {
-    margin:        [8, 8, 8, 8],
+    margin:        [6, 6, 6, 6],
     filename:      'Calendario_Anual_Cumpleanos_Manantial.pdf',
     image:         { type: 'jpeg', quality: 0.98 },
     html2canvas:   { scale: 2, useCORS: true, logging: false },
