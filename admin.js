@@ -225,7 +225,7 @@ function mostrarCumpleDestacado(index) {
 }
 
 /* =========================================================
-   GENERACIÓN DE CALENDARIO ANUAL EN PDF (ESTABLE Y DEFINITIVO)
+   GENERACIÓN DE CALENDARIO ANUAL EN PDF (ESTABLE Y DISEÑO FIEL)
    ========================================================= */
 
 function generarPDFCalendarioAnual(data) {
@@ -233,9 +233,19 @@ function generarPDFCalendarioAnual(data) {
     return alert("No hay datos en Supabase para construir el calendario.");
   }
 
-  const nombresMeses = [
-    "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", 
-    "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+  const mesesInfo = [
+    { nombre: "ENERO", num: 1, color: "#0099e6" },
+    { nombre: "FEBRERO", num: 2, color: "#0099e6" },
+    { nombre: "MARZO", num: 3, color: "#0099e6" },
+    { nombre: "ABRIL", num: 4, color: "#ffb300" },
+    { nombre: "MAYO", num: 5, color: "#ffb300" },
+    { nombre: "JUNIO", num: 6, color: "#ffb300" },
+    { nombre: "JULIO", num: 7, color: "#00b359" },
+    { nombre: "AGOSTO", num: 8, color: "#00b359" },
+    { nombre: "SEPTIEMBRE", num: 9, color: "#00b359" },
+    { nombre: "OCTUBRE", num: 10, color: "#ff334b" },
+    { nombre: "NOVIEMBRE", num: 11, color: "#ff334b" },
+    { nombre: "DICIEMBRE", num: 12, color: "#ff334b" }
   ];
 
   const gridContainer = document.getElementById("gridMesesPDF");
@@ -245,14 +255,15 @@ function generarPDFCalendarioAnual(data) {
 
   let htmlMeses = "";
 
-  nombresMeses.forEach((mesNombre, indexMes) => {
-    const numMes = indexMes + 1;
-    
+  mesesInfo.forEach((mes) => {
+    // Filtrar cumpleañeros del mes actual respetando la fecha de nacimiento (YYYY-MM-DD)
     const cumpleMes = data.filter(r => {
       if (!r.fecha_nacimiento) return false;
-      return parseInt(r.fecha_nacimiento.split("-")[1], 10) === numMes;
+      const partes = r.fecha_nacimiento.split("-");
+      return parseInt(partes[1], 10) === mes.num;
     });
 
+    // Ordenar por día del mes ascendente
     cumpleMes.sort((a, b) => {
       const diaA = parseInt(a.fecha_nacimiento.split("-")[2], 10);
       const diaB = parseInt(b.fecha_nacimiento.split("-")[2], 10);
@@ -260,30 +271,38 @@ function generarPDFCalendarioAnual(data) {
     });
 
     htmlMeses += `
-      <div style="width: 23.5%; min-height: 150px; border: 2px solid #102a45; border-radius: 10px; background: #ffffff; box-sizing: border-box; margin-bottom: 15px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-        <div style="background-color: #102a45; color: #cbb281; text-align: center; font-weight: bold; font-size: 13px; padding: 8px; letter-spacing: 1px;">
-          ${mesNombre}
+      <div style="width: 31%; margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div style="background-color: ${mes.color}; color: #ffffff; text-align: center; font-weight: bold; font-size: 13px; padding: 6px; text-transform: uppercase; letter-spacing: 1px;">
+          ${mes.nombre}
         </div>
-        <div style="padding: 8px;">
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 11px;">
+        <div style="padding: 6px; min-height: 110px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 10px; color: #333;">
     `;
 
     if (cumpleMes.length === 0) {
-      htmlMeses += `<li style="color: #aaa; text-align: center; font-style: italic; padding: 15px 0;">Sin registros</li>`;
+      htmlMeses += `
+        <tr>
+          <td colspan="2" style="text-align: center; color: #aaa; font-style: italic; padding: 12px 0;">Sin cumpleaños</td>
+        </tr>
+      `;
     } else {
       cumpleMes.forEach(c => {
-        const dia = c.fecha_nacimiento.split("-")[2];
+        const dia = parseInt(c.fecha_nacimiento.split("-")[2], 10);
         htmlMeses += `
-          <li style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #eee; padding: 4px 0;">
-            <span style="font-weight: 600; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="${c.nombre_completo}">${c.nombre_completo}</span>
-            <span style="background: #e6f4ea; color: #137333; font-weight: bold; padding: 2px 5px; border-radius: 4px; font-size: 10px;">Día ${dia}</span>
-          </li>
+          <tr style="border-bottom: 1px solid #f0f0f0;">
+            <td style="padding: 4px 2px; font-weight: 600; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px;">
+              ${c.nombre_completo}
+            </td>
+            <td style="padding: 4px 2px; text-align: right; font-weight: bold; color: #555;">
+              ${dia}
+            </td>
+          </tr>
         `;
       });
     }
 
     htmlMeses += `
-          </ul>
+          </table>
         </div>
       </div>
     `;
@@ -291,15 +310,20 @@ function generarPDFCalendarioAnual(data) {
 
   gridContainer.innerHTML = htmlMeses;
 
+  // Hacer visible temporalmente fuera de la pantalla (evita hojas en blanco en html2pdf)
   const elementoPDF = document.getElementById("printCalendarioAnual");
+  elementoPDF.style.position = "absolute";
+  elementoPDF.style.left = "0px";
+  elementoPDF.style.top = "0px";
+  elementoPDF.style.zIndex = "-9999";
   elementoPDF.style.display = "block";
 
   const opciones = {
-    margin:        5,
+    margin:        [8, 8, 8, 8],
     filename:      'Calendario_Anual_Cumpleanos_Manantial.pdf',
     image:         { type: 'jpeg', quality: 0.98 },
     html2canvas:   { scale: 2, useCORS: true, logging: false },
-    jsPDF:         { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    jsPDF:         { unit: 'mm', format: 'letter', orientation: 'portrait' }
   };
 
   setTimeout(() => {
