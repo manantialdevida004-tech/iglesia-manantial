@@ -2,9 +2,14 @@ const SUPABASE_URL = "https://yrabdazhmmrfoqichxmt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
 
 let registrosGlobales = [];
+let visitasGlobales = [];
 let miGrafica = null;
 let indiceCumpleActual = 0;
 let listaCumpleanosOrdenados = [];
+
+// Variable de simulación de fecha/hora para las visitas (Estilo Mecatrónica)
+let fechaSimuladaVisitas = new Date();
+const nombresDias = { 1: 'LUNES', 2: 'MARTES', 3: 'MIÉRCOLES', 4: 'JUEVES', 5: 'VIERNES', 6: 'SÁBADO', 7: 'DOMINGO' };
 
 document.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem("adminLogueado") !== "true") {
@@ -49,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mostrarCumpleDestacado(indiceCumpleActual);
   });
 
-  // Botón Único: Generar PDF del Calendario Anual de Cumpleaños
+  // Botón Calendario Anual de Cumpleaños PDF
   const btnPDFCalendario = document.getElementById("btnGenerarPDFCalendario");
   if (btnPDFCalendario) {
     btnPDFCalendario.addEventListener("click", () => {
@@ -57,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Guardar Visita Pastoral
+  // Guardar Visita Pastoral desde el panel principal
   document.getElementById("btnGuardarVisita").addEventListener("click", async () => {
     const nombre = document.getElementById("visitaNombre").value.trim();
     const fecha = document.getElementById("visitaFecha").value;
@@ -146,6 +151,169 @@ function actualizarKPIs(data) {
 }
 
 /* =========================================================
+   SISTEMA INTERACTIVO DE VISITAS (ESTILO HORARIO DE CLASES)
+   ========================================================= */
+
+function abrirHorarioVisitasApp() {
+  actualizarUIHorarioVisitas();
+  const modal = new bootstrap.Modal(document.getElementById('modalAppVisitas'));
+  modal.show();
+}
+
+function actualizarUIHorarioVisitas() {
+  let dia = fechaSimuladaVisitas.getDay();
+  if (dia === 0) dia = 7;
+  let hora = fechaSimuladaVisitas.getHours();
+  let minuto = fechaSimuladaVisitas.getMinutes();
+
+  document.getElementById('lblDiaSim').innerText = nombresDias[dia] || 'DOMINGO';
+  document.getElementById('lblHoraSim').innerText = `${String(hora).padStart(2, '0')}:${String(minuto).padStart(2, '0')} hrs`;
+
+  // Filtrar visitas programadas para este día simulado
+  const visitasDelDia = visitasGlobales.filter(v => {
+    if (!v.fecha_hora) return false;
+    const fechaV = new Date(v.fecha_hora);
+    let diaV = fechaV.getDay();
+    if (diaV === 0) diaV = 7;
+    return diaV === dia;
+  });
+
+  let visitaEnCurso = null;
+  visitasDelDia.forEach(v => {
+    const fechaV = new Date(v.fecha_hora);
+    const horaV = fechaV.getHours();
+    if (hora === horaV) {
+      visitaEnCurso = v;
+    }
+  });
+
+  if (visitaEnCurso) {
+    document.getElementById('lblVisitaActual').innerText = visitaEnCurso.titulo;
+    const info = document.getElementById('lblInfoVisitaActual');
+    info.style.display = 'block';
+    info.innerText = `Programada para hoy • ${new Date(visitaEnCurso.fecha_hora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+  } else {
+    document.getElementById('lblVisitaActual').innerText = 'Sin visita programada en este horario';
+    document.getElementById('lblInfoVisitaActual').style.display = 'none';
+  }
+}
+
+function abrirSelectorSimulacion() {
+  let diaActual = fechaSimuladaVisitas.getDay();
+  if (diaActual === 0) diaActual = 7;
+  document.getElementById('selectSimDia').value = diaActual;
+  document.getElementById('inputSimHora').value = fechaSimuladaVisitas.getHours();
+  document.getElementById('inputSimMinuto').value = fechaSimuladaVisitas.getMinutes();
+
+  const modalSim = new bootstrap.Modal(document.getElementById('modalSimulacionTiempo'));
+  modalSim.show();
+}
+
+function aplicarSimulacionVisitas() {
+  const nuevoDia = parseInt(document.getElementById('selectSimDia').value);
+  const nuevaHora = parseInt(document.getElementById('inputSimHora').value);
+  const nuevoMinuto = parseInt(document.getElementById('inputSimMinuto').value);
+
+  if (isNaN(nuevaHora) || nuevaHora < 0 || nuevaHora > 23 || isNaN(nuevoMinuto) || nuevoMinuto < 0 || nuevoMinuto > 59) {
+    return alert("Por favor ingresa una hora y minutos válidos.");
+  }
+
+  let jsDayTarget = nuevoDia === 7 ? 0 : nuevoDia;
+  let diferencia = jsDayTarget - fechaSimuladaVisitas.getDay();
+  fechaSimuladaVisitas.setDate(fechaSimuladaVisitas.getDate() + diferencia);
+  fechaSimuladaVisitas.setHours(nuevaHora);
+  fechaSimuladaVisitas.setMinutes(nuevoMinuto);
+
+  bootstrap.Modal.getInstance(document.getElementById('modalSimulacionTiempo')).hide();
+  actualizarUIHorarioVisitas();
+}
+
+function abrirHorarioHoyVisitas() {
+  let dia = fechaSimuladaVisitas.getDay();
+  if (dia === 0) dia = 7;
+  
+  const visitasDelDia = visitasGlobales.filter(v => {
+    if (!v.fecha_hora) return false;
+    let diaV = new Date(v.fecha_hora).getDay();
+    if (diaV === 0) diaV = 7;
+    return diaV === dia && v.tipo === 'Visita';
+  });
+
+  document.getElementById('tituloHorarioDiaVisita').innerText = `Visitas: ${nombresDias[dia]}`;
+  const contenedor = document.getElementById('listaVisitasDiaModal');
+  contenedor.innerHTML = '';
+
+  if (visitasDelDia.length === 0) {
+    contenedor.innerHTML = '<div class="text-white-50 text-center py-3 small">No hay visitas programadas para este día.</div>';
+  } else {
+    visitasDelDia.forEach((v, idx) => {
+      const horaFormateada = new Date(v.fecha_hora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      contenedor.innerHTML += `
+        <div class="class-item" id="visita-item-${idx}">
+          <input type="checkbox" onchange="toggleTachadoVisita(${idx})">
+          <div class="class-info" style="flex:1;">
+            <h6 class="text-white mb-1 fw-bold">${v.titulo}</h6>
+            <p class="time mb-0 small" style="color: var(--accent-red);">⏰ ${horaFormateada} hrs</p>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  document.getElementById('subPantallaSemana').style.display = 'none';
+  document.getElementById('subPantallaDia').style.display = 'block';
+}
+
+function toggleTachadoVisita(idx) {
+  const item = document.getElementById(`visita-item-${idx}`);
+  item.classList.toggle('completed');
+}
+
+function abrirHorarioSemanalVisitas() {
+  document.getElementById('subPantallaDia').style.display = 'none';
+  document.getElementById('subPantallaSemana').style.display = 'block';
+  cambiarTabVisitasSemana(1);
+}
+
+function cambiarTabVisitasSemana(diaNum) {
+  document.querySelectorAll('#subPantallaSemana .tab').forEach((t, idx) => {
+    if ((idx + 1) === diaNum) t.classList.add('active');
+    else t.classList.remove('active');
+  });
+
+  const visitasSemana = visitasGlobales.filter(v => {
+    if (!v.fecha_hora || v.tipo !== 'Visita') return false;
+    let diaV = new Date(v.fecha_hora).getDay();
+    if (diaV === 0) diaV = 7;
+    return diaV === diaNum;
+  });
+
+  const contenedor = document.getElementById('listaVisitasSemanaModal');
+  contenedor.innerHTML = '';
+
+  if (visitasSemana.length === 0) {
+    contenedor.innerHTML = '<div class="text-white-50 text-center py-3 small">Sin visitas este día.</div>';
+  } else {
+    visitasSemana.forEach(v => {
+      const horaFormateada = new Date(v.fecha_hora).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      contenedor.innerHTML += `
+        <div class="class-item py-2">
+          <div class="class-info" style="flex:1;">
+            <h6 class="text-white mb-1 fw-bold">${v.titulo}</h6>
+            <p class="time mb-0 small" style="color: #9ca3af;">📅 ${v.fecha_hora.split('T')[0]} • ${horaFormateada} hrs</p>
+          </div>
+        </div>
+      `;
+    });
+  }
+}
+
+function cerrarSubPantallaVisitas() {
+  document.getElementById('subPantallaDia').style.display = 'none';
+  document.getElementById('subPantallaSemana').style.display = 'none';
+}
+
+/* =========================================================
    CUMPLEAÑERO MÁS PRÓXIMO EN TIEMPO REAL
    ========================================================= */
 
@@ -183,6 +351,26 @@ function procesarCumpleanosCongregacion(data) {
     mostrarCumpleDestacado(indiceCumpleActual);
   } else {
     document.getElementById("cumpleDestacadoContainer").innerHTML = `<p class="text-white-50">No hay cumpleaños registrados.</p>`;
+  }
+
+  // Llenar modal de cumpleaños
+  const contenedorModal = document.getElementById("listaCumpleanosModal");
+  if (contenedorModal) {
+    const mesActualNum = hoy.getMonth() + 1;
+    const cumpleDelMes = data.filter(r => {
+      if (!r.fecha_nacimiento) return false;
+      return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mesActualNum;
+    });
+
+    let html = `<h6 class="text-success">🎈 Cumpleañeros del Mes (${cumpleDelMes.length}):</h6>`;
+    if (cumpleDelMes.length > 0) {
+      cumpleDelMes.forEach(c => {
+        html += `<p class="mb-1 text-white">🎂 <b>${c.nombre_completo}</b> - ${c.fecha_nacimiento}</p>`;
+      });
+    } else {
+      html += `<p class="text-white-50 small">Ninguno este mes.</p>`;
+    }
+    contenedorModal.innerHTML = html;
   }
 }
 
@@ -225,7 +413,7 @@ function mostrarCumpleDestacado(index) {
 }
 
 /* =========================================================
-   GENERACIÓN DE CALENDARIO ANUAL EN PDF (CORREGIDO SIN HOJA EN BLANCO)
+   GENERACIÓN DE CALENDARIO ANUAL EN PDF
    ========================================================= */
 
 function generarPDFCalendarioAnual(data) {
@@ -249,61 +437,42 @@ function generarPDFCalendarioAnual(data) {
   ];
 
   const gridContainer = document.getElementById("gridMesesPDF");
-  if (!gridContainer) {
-    return alert("No se encontró el contenedor del calendario en el HTML.");
-  }
+  if (!gridContainer) return;
 
   let htmlMeses = "";
-
   mesesInfo.forEach((mes) => {
     const cumpleMes = data.filter(r => {
       if (!r.fecha_nacimiento) return false;
-      const partes = r.fecha_nacimiento.split("-");
-      return parseInt(partes[1], 10) === mes.num;
+      return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mes.num;
     });
 
     cumpleMes.sort((a, b) => {
-      const diaA = parseInt(a.fecha_nacimiento.split("-")[2], 10);
-      const diaB = parseInt(b.fecha_nacimiento.split("-")[2], 10);
-      return diaA - diaB;
+      return parseInt(a.fecha_nacimiento.split("-")[2], 10) - parseInt(b.fecha_nacimiento.split("-")[2], 10);
     });
 
     htmlMeses += `
-      <div style="width: 31%; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); box-sizing: border-box;">
-        <div style="background-color: ${mes.color}; color: #ffffff; text-align: center; font-weight: bold; font-size: 12px; padding: 6px; text-transform: uppercase; letter-spacing: 1px;">
+      <div style="width: 31%; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; background: #ffffff;">
+        <div style="background-color: ${mes.color}; color: #ffffff; text-align: center; font-weight: bold; font-size: 11px; padding: 5px; text-transform: uppercase;">
           ${mes.nombre}
         </div>
-        <div style="padding: 6px; min-height: 95px; background-color: #ffffff;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 10px; color: #333333;">
+        <div style="padding: 5px; min-height: 90px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 9px; color: #333333;">
     `;
 
     if (cumpleMes.length === 0) {
-      htmlMeses += `
-        <tr>
-          <td colspan="2" style="text-align: center; color: #aaaaaa; font-style: italic; padding: 10px 0;">Sin cumpleaños</td>
-        </tr>
-      `;
+      htmlMeses += `<tr><td colspan="2" style="text-align: center; color: #aaa; padding: 8px;">Sin cumpleaños</td></tr>`;
     } else {
       cumpleMes.forEach(c => {
         const dia = parseInt(c.fecha_nacimiento.split("-")[2], 10);
         htmlMeses += `
           <tr style="border-bottom: 1px solid #f0f0f0;">
-            <td style="padding: 3px 2px; font-weight: 600; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; color: #222222;">
-              ${c.nombre_completo}
-            </td>
-            <td style="padding: 3px 2px; text-align: right; font-weight: bold; color: #444444;">
-              ${dia}
-            </td>
+            <td style="padding: 2px; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.nombre_completo}</td>
+            <td style="padding: 2px; text-align: right; font-weight: bold;">${dia}</td>
           </tr>
         `;
       });
     }
-
-    htmlMeses += `
-          </table>
-        </div>
-      </div>
-    `;
+    htmlMeses += `</table></div></div>`;
   });
 
   gridContainer.innerHTML = htmlMeses;
@@ -311,34 +480,25 @@ function generarPDFCalendarioAnual(data) {
   const elementoPDF = document.getElementById("printCalendarioAnual");
   const originalStyle = elementoPDF.getAttribute("style") || "";
 
-  // Renderizar fuera de pantalla para no alterar la estructura visual de la interfaz
   elementoPDF.style.position = "fixed";
   elementoPDF.style.left = "-9999px";
   elementoPDF.style.top = "0px";
   elementoPDF.style.width = "750px";
   elementoPDF.style.display = "block";
-  elementoPDF.style.zIndex = "-9999";
 
-  const opciones = {
-    margin:        [8, 8, 8, 8],
-    filename:      'Calendario_Anual_Cumpleanos_Manantial.pdf',
-    image:         { type: 'jpeg', quality: 0.98 },
-    html2canvas:   { scale: 2, useCORS: true, logging: false },
-    jsPDF:         { unit: 'mm', format: 'letter', orientation: 'portrait' }
-  };
-
-  setTimeout(() => {
-    html2pdf().from(elementoPDF).set(opciones).save().then(() => {
-      elementoPDF.setAttribute("style", originalStyle);
-    }).catch(err => {
-      console.error("Error al generar PDF:", err);
-      elementoPDF.setAttribute("style", originalStyle);
-    });
-  }, 400);
+  html2pdf().from(elementoPDF).set({
+    margin: [8, 8, 8, 8],
+    filename: 'Calendario_Anual_Cumpleanos_Manantial.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+  }).save().then(() => {
+    elementoPDF.setAttribute("style", originalStyle);
+  });
 }
 
 /* =========================================================
-   FUNCIONES GENERALES DE PANEL
+   FUNCIONES GENERALES DE PANEL Y TARJETAS
    ========================================================= */
 
 function renderizarTarjetas(data) {
@@ -458,10 +618,10 @@ async function cargarVisitasYEventos() {
       }
     });
     if (!res.ok) return;
-    const items = await res.json();
+    visitasGlobales = await res.json();
 
-    const visitas = items.filter(i => i.tipo === 'Visita');
-    const eventos = items.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
+    const visitas = visitasGlobales.filter(i => i.tipo === 'Visita');
+    const eventos = visitasGlobales.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
 
     const hoyStr = new Date().toISOString().split("T")[0];
     const visitasHoy = visitas.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
