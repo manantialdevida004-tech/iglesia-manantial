@@ -8,9 +8,20 @@
   <!-- Chart.js para gráficas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root {
+      --bg-color: #080c14;
+      --primary-color: #cbb281;
+      --card-color: #111827;
+      --container-bg: #0f172a;
+      --current-class-bg: #1e3a8a;
+      --text-white: #FFFFFF;
+      --text-grey: #9ca3af;
+      --accent-red: #f59e0b;
+    }
+
     body {
-      background-color: #080c14;
-      color: #f8fafc;
+      background-color: var(--bg-color);
+      color: var(--text-white);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       overflow-x: hidden;
     }
@@ -52,7 +63,7 @@
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
     }
 
-    /* Tarjetas Directorio */
+    /* Tarjetas Mercado Libre (Directorio) */
     .card-preview {
       background-color: #111827;
       border: 1px solid #374151;
@@ -98,12 +109,82 @@
       transform: translateY(-2px);
     }
 
-    /* Zona de Cumpleaños Destacado */
     .card-cumple-destacado {
       background-color: #111827;
       border: 1px solid #374151;
       border-radius: 12px;
       border-left: 5px solid #10b981;
+    }
+
+    /* Estilos estéticos integrados del Horario Escolar para la App de Visitas */
+    .app-container-modal {
+      width: 100%;
+      background-color: var(--card-color);
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 500px;
+    }
+
+    .sim-box {
+      background-color: var(--container-bg);
+      border: 1.5px solid var(--primary-color);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 12px;
+    }
+
+    .class-item {
+      background-color: var(--container-bg);
+      border-radius: 16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .class-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary-color);
+      cursor: pointer;
+    }
+
+    .completed h3 {
+      color: var(--text-grey) !important;
+      text-decoration: line-through;
+    }
+    .completed p.time {
+      color: #555 !important;
+    }
+
+    .tabs {
+      display: flex;
+      background-color: var(--bg-color);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      font-size: 14px;
+      color: var(--text-grey);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab.active {
+      color: var(--text-white);
+      border-bottom-color: var(--primary-color);
+      font-weight: bold;
     }
   </style>
 </head>
@@ -159,7 +240,7 @@
       </div>
     </div>
 
-    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN -->
+    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN POR SECCIONES -->
     <div class="row g-4 mb-4">
       <div class="col-lg-12">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
@@ -177,9 +258,10 @@
         <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
       </div>
       <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end flex-wrap">
-        <button class="btn btn-outline-warning btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAgenda">📅 Agendas y Visitas</button>
+        <button class="btn btn-kraft btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">🎂 Cumpleaños</button>
+        <button id="btnGenerarPDFCalendario" class="btn btn-outline-warning btn-sm px-3">📄 Calendario Anual PDF</button>
         <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel</button>
-        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF Reporte</button>
+        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF General</button>
       </div>
     </div>
 
@@ -193,46 +275,39 @@
 
     <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
     <div class="row g-4 mb-5">
-      <!-- Columna Izquierda: Vista Previa del Próximo Cumpleañero -->
       <div class="col-lg-7">
         <div class="card card-cumple-destacado p-4 shadow h-100">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold text-success mb-0">🎉 Próximo Cumpleaños</h4>
-            <span class="badge bg-success text-dark fs-6" id="badgeDiasRestantes">Calculando...</span>
+            <h4 class="fw-bold text-success mb-0">🎉 Cumpleaños de la Congregación</h4>
+            <span id="badgeDiasRestantes" class="badge bg-success text-dark">Calculando...</span>
           </div>
-          
           <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
             <div class="spinner-border text-success spinner-border-sm" role="status"></div>
-            <span class="text-white-50">Cargando datos desde Supabase...</span>
+            <span class="text-white-50">Cargando cumpleañero más próximo...</span>
           </div>
-
-          <div class="d-flex gap-2 flex-wrap mt-auto">
+          <div class="d-flex gap-2 flex-wrap">
             <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
-            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Siguiente ➡️</button>
-            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Felicitación por WhatsApp</a>
+            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Próximo ➡️</button>
+            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Mensaje WhatsApp</a>
           </div>
         </div>
       </div>
-
-      <!-- Columna Derecha: Botón Único para Descargar PDF del Calendario Anual -->
       <div class="col-lg-5">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center text-center">
-          <h5 class="text-gold fw-bold mb-2">📅 Calendario Anual de Cumpleaños</h5>
-          <p class="text-white-50 small mb-3">Descarga el reporte en PDF con todos los cumpleaños de la iglesia organizados mes a mes.</p>
-          <button id="btnGenerarPDFCalendario" class="btn btn-kraft w-100 py-3 fw-bold shadow">
-            📥 Descargar Calendario Anual (PDF)
-          </button>
+        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
+          <h5 class="text-gold fw-bold">📅 Calendarios de Cumpleaños</h5>
+          <button class="btn btn-kraft w-100" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">Ver Calendario Mensual</button>
+          <button class="btn btn-outline-warning w-100" onclick="document.getElementById('btnGenerarPDFCalendario').click();">Descargar Calendario Anual (PDF)</button>
         </div>
       </div>
     </div>
 
-    <!-- 7. ZONA DE AGENDA Y VISITAS -->
+    <!-- 7. ZONA DE AGENDA Y VISITAS (INCORPORANDO EL SISTEMA DE HORARIOS ESTILO MECATRÓNICA) -->
     <div class="row g-4 mb-4">
       <!-- Columna Izquierda: Visitas a Congregantes -->
       <div class="col-lg-6">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
           <h4 class="fw-bold text-warning mb-3">🏡 Agenda de Visitas a Congregantes</h4>
-          <p class="text-white-50 small">Control de visitas pastorales domiciliarias.</p>
+          <p class="text-white-50 small">Control interactivo de visitas pastorales domiciliarias.</p>
           
           <div class="row g-2 mb-3">
             <div class="col-6">
@@ -249,16 +324,23 @@
             </div>
           </div>
 
-          <!-- Captura de Visita -->
+          <!-- BOTÓN PRINCIPAL PARA ABRIR LA INTERFAZ ESTILO HORARIO DE CLASES -->
+          <button class="btn btn-kraft w-100 py-3 mb-3" onclick="abrirHorarioVisitasApp()">
+            📅 Abrir Horario de Visitas Pastorales (Estilo App)
+          </button>
+
+          <!-- Zona de Captura Rápida de Visita -->
           <div class="p-3 bg-black rounded border border-secondary mb-3">
             <h6 class="text-gold mb-2">Capturar Nueva Visita</h6>
             <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante">
-            <input type="date" id="visitaFecha" class="form-control form-control-sm mb-2">
+            <input type="datetime-local" id="visitaFecha" class="form-control form-control-sm mb-2">
             <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita</button>
           </div>
 
           <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
-          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
+          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
+            <!-- Dinámico -->
+          </div>
         </div>
       </div>
 
@@ -275,29 +357,110 @@
           </div>
 
           <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
-          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 250px; overflow-y: auto;">
+            <!-- Dinámico -->
+          </div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- CONTENEDOR PLANTILLA IMPRESIÓN (OCULTO DEL DASHBOARD) -->
-  <div id="printCalendarioAnual" style="display: none; background-color: #ffffff; color: #000000; padding: 20px; font-family: 'Segoe UI', Arial, sans-serif; width: 750px;">
-    
-    <!-- Banner Superior de Celebración -->
-    <div style="background: linear-gradient(135deg, #0099e6 0%, #00b359 50%, #ffb300 100%); border-radius: 8px; padding: 15px; text-align: center; color: #ffffff; margin-bottom: 18px;">
-      <h1 style="margin: 0; font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #ffffff !important;">FELIZ CUMPLEAÑOS</h1>
-      <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.95; color: #ffffff !important;">Calendario Anual de Cumpleañeros • Iglesia Cristiana Manantial de Vida</p>
-    </div>
+  <!-- MODAL INTERACTIVO ESTILO HORARIO DE CLASES (APLICACIÓN DE VISITAS) -->
+  <div class="modal fade" id="modalAppVisitas" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+      <div class="modal-content bg-dark text-white border-secondary p-3">
+        <div class="modal-header border-secondary pb-2">
+          <h5 class="text-gold fw-bold">⚙️ Sistema de Horarios de Visitas Pastorales</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0 pt-3">
+          
+          <div class="app-container-modal p-3">
+            <!-- Simulador de Estado / Día y Hora actual -->
+            <div class="sim-box" onclick="abrirSelectorSimulacion()">
+              <div>
+                <h2 id="lblDiaSim" class="text-white mb-1" style="font-size: 20px;">LUNES</h2>
+                <p id="lblHoraSim" class="mb-0 text-white-50 small">12:00 hrs</p>
+              </div>
+              <span style="font-size: 24px;">⚙️ Simular</span>
+            </div>
 
-    <!-- Rejilla de 12 Meses -->
-    <div id="gridMesesPDF" style="display: flex; flex-wrap: wrap; gap: 2.3%; justify-content: flex-start;">
-      <!-- Se genera dinámicamente con JavaScript -->
-    </div>
+            <!-- Estado de Visita en Curso -->
+            <div class="card mb-3 p-3" style="background-color: #1e3a8a; border-radius: 14px;">
+              <div class="small fw-bold text-warning mb-1">🟢 VISITA EN CURSO O PROGRAMADA AHORA</div>
+              <div class="fs-5 fw-bold" id="lblVisitaActual">Sin visita en este horario</div>
+              <div class="small text-white-50" id="lblInfoVisitaActual" style="display:none;"></div>
+            </div>
 
-    <div style="text-align: center; margin-top: 15px; font-size: 10px; color: #777; border-top: 1px solid #eee; padding-top: 8px;">
-      Reporte generado automáticamente desde la base de datos de Supabase 🕊️
+            <div class="d-grid gap-2 mb-3">
+              <button class="btn btn-kraft btn-sm py-2" onclick="abrirHorarioHoyVisitas()">📅 Ver Visitas de Hoy</button>
+              <button class="btn btn-outline-light btn-sm py-2" onclick="abrirHorarioSemanalVisitas()">📊 Vista Semanal Completa</button>
+            </div>
+
+            <!-- Pantalla Interna: Día Específico -->
+            <div id="subPantallaDia" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 id="tituloHorarioDiaVisita" class="text-gold mb-0">Horario del Día</h6>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
+              </div>
+              <div id="listaVisitasDiaModal" style="max-height: 220px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Pantalla Interna: Semana Completa con Tabs -->
+            <div id="subPantallaSemana" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="text-gold mb-0">Vista Semanal</h6>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
+              </div>
+              <div class="tabs mb-2 rounded">
+                <div class="tab active" onclick="cambiarTabVisitasSemana(1)">Lun</div>
+                <div class="tab" onclick="cambiarTabVisitasSemana(2)">Mar</div>
+                <div class="tab" onclick="cambiarTabVisitasSemana(3)">Mié</div>
+                <div class="tab" onclick="cambiarTabVisitasSemana(4)">Jue</div>
+                <div class="tab" onclick="cambiarTabVisitasSemana(5)">Vie</div>
+                <div class="tab" onclick="cambiarTabVisitasSemana(6)">Sáb</div>
+              </div>
+              <div id="listaVisitasSemanaModal" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE SIMULACIÓN DE DÍA Y HORA (Estilo Mecatrónica) -->
+  <div class="modal fade" id="modalSimulacionTiempo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content bg-dark text-white border-secondary p-3">
+        <h6 class="text-gold fw-bold mb-3">⚙️ Simular Día y Hora de Visitas</h6>
+        <div class="mb-2">
+          <label class="small text-white-50">Día de la semana</label>
+          <select id="selectSimDia" class="form-select form-select-sm">
+            <option value="1">Lunes</option>
+            <option value="2">Martes</option>
+            <option value="3">Miércoles</option>
+            <option value="4">Jueves</option>
+            <option value="5">Viernes</option>
+            <option value="6">Sábado</option>
+            <option value="7">Domingo</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="small text-white-50">Hora (0 - 23)</label>
+          <input type="number" id="inputSimHora" class="form-control form-control-sm" min="0" max="23" placeholder="Ej. 16">
+        </div>
+        <div class="mb-3">
+          <label class="small text-white-50">Minutos (0 - 59)</label>
+          <input type="number" id="inputSimMinuto" class="form-control form-control-sm" min="0" max="59" placeholder="Ej. 30">
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-kraft btn-sm w-50" onclick="aplicarSimulacionVisitas()">Aplicar</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -318,20 +481,28 @@
     </div>
   </div>
 
-  <!-- MODAL DE AGENDA Y VISITAS RÁPIDO -->
-  <div class="modal fade" id="modalAgenda" tabindex="-1">
+  <!-- MODAL DE CUMPLEAÑEROS -->
+  <div class="modal fade" id="modalCumpleanos" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content bg-dark text-white border-secondary">
         <div class="modal-header border-secondary">
-          <h5 class="text-warning fw-bold">📅 Acceso Rápido a Agendas</h5>
+          <h5 class="text-success fw-bold">🎂 Cumpleañeros del Mes y Día</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body text-white text-center">
-          <p>Utiliza los formularios interactivos de visitas y eventos distribuidos en el panel principal para una gestión más ágil.</p>
-          <button type="button" class="btn btn-kraft btn-sm" data-bs-dismiss="modal">Entendido</button>
+        <div class="modal-body text-white" id="listaCumpleanosModal">
+          <p class="text-muted">Calculando cumpleañeros...</p>
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- CONTENEDOR OCULTO PARA GENERAR EL PDF DEL CALENDARIO ANUAL -->
+  <div id="printCalendarioAnual" style="display: none; width: 750px; background: #ffffff; padding: 15px; color: #000000;">
+    <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #0099e6; padding-bottom: 8px;">
+      <h2 style="margin: 0; color: #0099e6; font-size: 20px; font-weight: bold; text-transform: uppercase;">Calendario Anual de Cumpleaños 2026</h2>
+      <p style="margin: 3px 0 0 0; font-size: 11px; color: #555555;">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Ver.</p>
+    </div>
+    <div id="gridMesesPDF" style="display: flex; flex-wrap: wrap; justify-content: space-between;"></div>
   </div>
 
   <footer class="text-center py-4 text-white-50 border-top border-secondary small mt-5" style="background-color: #04060a;">
