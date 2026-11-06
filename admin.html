@@ -116,7 +116,7 @@
       border-left: 5px solid #10b981;
     }
 
-    /* Estilos estéticos integrados del Horario Escolar para la App de Visitas */
+    /* Estilos estéticos integrados del Horario para la App de Visitas */
     .app-container-modal {
       width: 100%;
       background-color: var(--card-color);
@@ -124,7 +124,7 @@
       flex-direction: column;
       border-radius: 12px;
       overflow: hidden;
-      min-height: 500px;
+      min-height: 450px;
     }
 
     .sim-box {
@@ -157,12 +157,9 @@
       cursor: pointer;
     }
 
-    .completed h3 {
+    .completed h6 {
       color: var(--text-grey) !important;
       text-decoration: line-through;
-    }
-    .completed p.time {
-      color: #555 !important;
     }
 
     .tabs {
@@ -174,8 +171,8 @@
     .tab {
       flex: 1;
       text-align: center;
-      padding: 12px;
-      font-size: 14px;
+      padding: 10px;
+      font-size: 13px;
       color: var(--text-grey);
       cursor: pointer;
       border-bottom: 3px solid transparent;
@@ -301,7 +298,7 @@
       </div>
     </div>
 
-    <!-- 7. ZONA DE AGENDA Y VISITAS (INCORPORANDO EL SISTEMA DE HORARIOS ESTILO MECATRÓNICA) -->
+    <!-- 7. ZONA DE AGENDA Y VISITAS (CAPTURA RECURRENTE) -->
     <div class="row g-4 mb-4">
       <!-- Columna Izquierda: Visitas a Congregantes -->
       <div class="col-lg-6">
@@ -329,12 +326,23 @@
             📅 Abrir Horario de Visitas Pastorales (Estilo App)
           </button>
 
-          <!-- Zona de Captura Rápida de Visita -->
+          <!-- Zona de Captura de Visita Recurrente -->
           <div class="p-3 bg-black rounded border border-secondary mb-3">
-            <h6 class="text-gold mb-2">Capturar Nueva Visita</h6>
-            <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante">
-            <input type="datetime-local" id="visitaFecha" class="form-control form-control-sm mb-2">
-            <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita</button>
+            <h6 class="text-gold mb-2">Capturar Nueva Visita (Semanal)</h6>
+            <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante (Ej. Pepe)">
+            
+            <select id="visitaDiaSemana" class="form-select form-select-sm mb-2">
+              <option value="Lunes">Lunes</option>
+              <option value="Martes">Martes</option>
+              <option value="Miércoles">Miércoles</option>
+              <option value="Jueves">Jueves</option>
+              <option value="Viernes">Viernes</option>
+              <option value="Sábado">Sábado</option>
+              <option value="Domingo">Domingo</option>
+            </select>
+
+            <input type="time" id="visitaHora" class="form-control form-control-sm mb-2">
+            <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita Recurrente</button>
           </div>
 
           <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
@@ -431,7 +439,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE SIMULACIÓN DE DÍA Y HORA (Estilo Mecatrónica) -->
+  <!-- MODAL DE SIMULACIÓN DE DÍA Y HORA -->
   <div class="modal fade" id="modalSimulacionTiempo" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-sm">
       <div class="modal-content bg-dark text-white border-secondary p-3">
