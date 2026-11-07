@@ -116,7 +116,7 @@
       border-left: 5px solid #10b981;
     }
 
-    /* Estilos para modales de horarios y agendas */
+    /* Estilos para modales de app */
     .app-container-modal {
       width: 100%;
       background-color: var(--card-color);
@@ -160,28 +160,6 @@
     .completed h6 {
       color: var(--text-grey) !important;
       text-decoration: line-through;
-    }
-
-    .tabs {
-      display: flex;
-      background-color: var(--bg-color);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .tab {
-      flex: 1;
-      text-align: center;
-      padding: 10px;
-      font-size: 13px;
-      color: var(--text-grey);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-    }
-
-    .tab.active {
-      color: var(--text-white);
-      border-bottom-color: var(--primary-color);
-      font-weight: bold;
     }
   </style>
 </head>
@@ -255,8 +233,7 @@
         <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
       </div>
       <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end flex-wrap">
-        <button class="btn btn-kraft btn-sm px-3" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">🎂 Cumpleaños</button>
-        <button id="btnGenerarPDFCalendario" class="btn btn-outline-warning btn-sm px-3">📄 Calendario Anual PDF</button>
+        <button class="btn btn-kraft btn-sm px-3" onclick="abrirCalendarioCumpleanosApp()">🎂 Ver Calendario Anual</button>
         <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel</button>
         <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF General</button>
       </div>
@@ -270,7 +247,7 @@
       </div>
     </div>
 
-    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
+    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN (ACTUALIZADA SIN BOTÓN PDF) -->
     <div class="row g-4 mb-5">
       <div class="col-lg-7">
         <div class="card card-cumple-destacado p-4 shadow h-100">
@@ -291,14 +268,14 @@
       </div>
       <div class="col-lg-5">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
-          <h5 class="text-gold fw-bold">📅 Calendarios de Cumpleaños</h5>
-          <button class="btn btn-kraft w-100" data-bs-toggle="modal" data-bs-target="#modalCumpleanos">Ver Calendario Mensual</button>
-          <button class="btn btn-outline-warning w-100" onclick="document.getElementById('btnGenerarPDFCalendario').click();">Descargar Calendario Anual (PDF)</button>
+          <h5 class="text-gold fw-bold">🎈 Calendarios de Cumpleaños</h5>
+          <p class="text-white-50 small mb-0">Visualiza la agenda festiva anual ordenada mes a mes.</p>
+          <button class="btn btn-kraft w-100 py-2" onclick="abrirCalendarioCumpleanosApp()">🎂 Abrir Calendario Anual de Cumpleaños (Estilo App)</button>
         </div>
       </div>
     </div>
 
-    <!-- 7. ZONA DE AGENDA Y VISITAS (VISITAS Y EVENTOS REPLICADOS) -->
+    <!-- 7. ZONA DE AGENDA Y VISITAS (VISITAS Y EVENTOS) -->
     <div class="row g-4 mb-4">
       <!-- Columna Izquierda: Visitas a Congregantes -->
       <div class="col-lg-6">
@@ -325,7 +302,6 @@
             📅 Abrir Horario de Visitas Pastorales (Estilo App)
           </button>
 
-          <!-- Zona de Captura de Visita Recurrente -->
           <div class="p-3 bg-black rounded border border-secondary mb-3">
             <h6 class="text-gold mb-2">Capturar Nueva Visita (Semanal)</h6>
             <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante (Ej. Pepe)">
@@ -345,13 +321,11 @@
           </div>
 
           <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
-          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
-            <!-- Dinámico -->
-          </div>
+          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
         </div>
       </div>
 
-      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor (REPLICADO CON FECHA, HORA Y RELEVANCIA) -->
+      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor -->
       <div class="col-lg-6">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
           <h4 class="fw-bold text-info mb-3">📖 Agenda de Eventos y Cuentos del Pastor</h4>
@@ -376,7 +350,6 @@
             📅 Abrir Calendario de Eventos y Cuentos (Estilo App)
           </button>
 
-          <!-- Zona de Captura de Evento Avanzado -->
           <div class="p-3 bg-black rounded border border-secondary mb-3">
             <h6 class="text-gold mb-2">Capturar Nuevo Evento / Cuento</h6>
             <input type="text" id="eventoTitulo" class="form-control form-control-sm mb-2" placeholder="Título (Ej. Reunión especial / Cuento)">
@@ -400,9 +373,7 @@
           </div>
 
           <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
-          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
-            <!-- Dinámico -->
-          </div>
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
         </div>
       </div>
     </div>
@@ -463,7 +434,7 @@
     </div>
   </div>
 
-  <!-- MODAL INTERACTIVO DE EVENTOS (ESTILO APP REPLICADO) -->
+  <!-- MODAL INTERACTIVO DE EVENTOS (ESTILO APP) -->
   <div class="modal fade" id="modalAppEventos" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-md">
       <div class="modal-content bg-dark text-white border-secondary p-3">
@@ -478,12 +449,29 @@
               <div class="fs-5 fw-bold" id="lblEventoDestacadoApp">Sin eventos próximos</div>
               <div class="small text-white-50 mt-1" id="lblInfoEventoDestacado">Revisa el listado completo abajo.</div>
             </div>
-            <div class="d-grid gap-2 mb-3">
-              <button class="btn btn-outline-info btn-sm py-2" onclick="abrirEventosProximosModal()">📋 Listado Completo de Eventos</button>
-            </div>
             <div id="subPantallaEventosLista" style="display:block; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
               <h6 class="text-info mb-2">Agenda Global de Eventos y Cuentos:</h6>
               <div id="listaEventosModalApp" style="max-height: 250px; overflow-y: auto;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL INTERACTIVO DE CUMPLEAÑOS ANUAL (NUEVO ESTILO APP) -->
+  <div class="modal fade" id="modalAppCumpleanos" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-dark text-white border-secondary p-3">
+        <div class="modal-header border-secondary pb-2">
+          <h5 class="text-success fw-bold">🎈 Calendario Anual de Cumpleaños de la Congregación</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0 pt-3">
+          <div class="app-container-modal p-3" style="max-height: 70vh; overflow-y: auto;">
+            <p class="text-white-50 small text-center mb-3">Organización festiva de todos los cumpleaños registrados en la congregación divididos mes a mes.</p>
+            <div id="gridCalendarioCumpleanosModal" class="row g-3">
+              <!-- Dinámico por JavaScript -->
             </div>
           </div>
         </div>
@@ -539,30 +527,6 @@
         </div>
       </div>
     </div>
-  </div>
-
-  <!-- MODAL DE CUMPLEAÑEROS -->
-  <div class="modal fade" id="modalCumpleanos" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-white border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="text-success fw-bold">🎂 Cumpleañeros del Mes y Día</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-white" id="listaCumpleanosModal">
-          <p class="text-muted">Calculando cumpleañeros...</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONTENEDOR OCULTO PARA PDF ANUAL -->
-  <div id="printCalendarioAnual" style="display: none; width: 750px; background: #ffffff; padding: 15px; color: #000000;">
-    <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #0099e6; padding-bottom: 8px;">
-      <h2 style="margin: 0; color: #0099e6; font-size: 20px; font-weight: bold; text-transform: uppercase;">Calendario Anual de Cumpleaños 2026</h2>
-      <p style="margin: 3px 0 0 0; font-size: 11px; color: #555555;">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Ver.</p>
-    </div>
-    <div id="gridMesesPDF" style="display: flex; flex-wrap: wrap; justify-content: space-between;"></div>
   </div>
 
   <footer class="text-center py-4 text-white-50 border-top border-secondary small mt-5" style="background-color: #04060a;">
