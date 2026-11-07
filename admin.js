@@ -54,14 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
     mostrarCumpleDestacado(indiceCumpleActual);
   });
 
-  // Botón Calendario Anual de Cumpleaños PDF
-  const btnPDFCalendario = document.getElementById("btnGenerarPDFCalendario");
-  if (btnPDFCalendario) {
-    btnPDFCalendario.addEventListener("click", () => {
-      generarPDFCalendarioAnual(registrosGlobales);
-    });
-  }
-
   // Guardar Visita Pastoral Recurrente en Supabase
   const btnGuardarVisita = document.getElementById("btnGuardarVisita");
   if (btnGuardarVisita) {
@@ -109,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Guardar Evento del Pastor Avanzado (Con Fecha, Hora y Relevancia)
+  // Guardar Evento del Pastor Avanzado
   const btnGuardarEvento = document.getElementById("btnGuardarEvento");
   if (btnGuardarEvento) {
     btnGuardarEvento.addEventListener("click", async () => {
@@ -369,7 +361,7 @@ function cerrarSubPantallaVisitas() {
 }
 
 /* =========================================================
-   SISTEMA DE EVENTOS DEL PASTOR (ESTILO APP REPLICADO)
+   SISTEMA DE EVENTOS DEL PASTOR (ESTILO APP)
    ========================================================= */
 
 function abrirHorarioEventosApp() {
@@ -390,7 +382,6 @@ function actualizarUIEventosApp() {
     return;
   }
 
-  // Tomar el primer evento como destacado
   const proximo = eventosGlobales[0];
   lblDestacado.innerText = proximo.titulo;
   lblInfoDestacado.innerText = `📅 ${proximo.fecha_hora ? proximo.fecha_hora.replace('T', ' ').substring(0, 16) : ''} • ${proximo.descripcion || ''}`;
@@ -411,8 +402,69 @@ function actualizarUIEventosApp() {
   contenedor.innerHTML = htmlE;
 }
 
-function abrirEventosProximosModal() {
-  // Ya muestra por defecto el listado completo en el modal
+/* =========================================================
+   CALENDARIO ANUAL DE CUMPLEAÑOS (ESTILO APP MODAL)
+   ========================================================= */
+
+function abrirCalendarioCumpleanosApp() {
+  const mesesInfo = [
+    { nombre: "ENERO", num: 1, color: "#3b82f6" },
+    { nombre: "FEBRERO", num: 2, color: "#06b6d4" },
+    { nombre: "MARZO", num: 3, color: "#10b981" },
+    { nombre: "ABRIL", num: 4, color: "#f59e0b" },
+    { nombre: "MAYO", num: 5, color: "#ec4899" },
+    { nombre: "JUNIO", num: 6, color: "#8b5cf6" },
+    { nombre: "JULIO", num: 7, color: "#ef4444" },
+    { nombre: "AGOSTO", num: 8, color: "#14b8a6" },
+    { nombre: "SEPTIEMBRE", num: 9, color: "#f97316" },
+    { nombre: "OCTUBRE", num: 10, color: "#6366f1" },
+    { nombre: "NOVIEMBRE", num: 11, color: "#d946ef" },
+    { nombre: "DICIEMBRE", num: 12, color: "#eab308" }
+  ];
+
+  const gridContainer = document.getElementById("gridCalendarioCumpleanosModal");
+  if (!gridContainer) return;
+
+  let htmlMeses = "";
+  mesesInfo.forEach((mes) => {
+    const cumpleMes = registrosGlobales.filter(r => {
+      if (!r.fecha_nacimiento) return false;
+      return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mes.num;
+    });
+
+    cumpleMes.sort((a, b) => {
+      return parseInt(a.fecha_nacimiento.split("-")[2], 10) - parseInt(b.fecha_nacimiento.split("-")[2], 10);
+    });
+
+    htmlMeses += `
+      <div class="col-md-4 col-sm-6">
+        <div class="card bg-black border border-secondary rounded-3 h-100 overflow-hidden shadow">
+          <div class="py-2 px-3 text-white fw-bold text-center" style="background-color: ${mes.color}; font-size: 13px; text-transform: uppercase;">
+            🎈 ${mes.nombre}
+          </div>
+          <div class="p-3" style="min-height: 120px; max-height: 180px; overflow-y: auto;">
+    `;
+
+    if (cumpleMes.length === 0) {
+      htmlMeses += `<p class="text-white-50 small text-center mb-0 py-2">Sin cumpleaños registrados</p>`;
+    } else {
+      cumpleMes.forEach(c => {
+        const dia = parseInt(c.fecha_nacimiento.split("-")[2], 10);
+        htmlMeses += `
+          <div class="d-flex justify-content-between align-items-center border-bottom border-secondary py-1">
+            <span class="text-white small text-truncate" style="max-width: 150px;" title="${c.nombre_completo}">🎂 ${c.nombre_completo}</span>
+            <span class="badge bg-warning text-dark" style="font-size: 11px;">Día ${dia}</span>
+          </div>
+        `;
+      });
+    }
+
+    htmlMeses += `</div></div></div>`;
+  });
+
+  gridContainer.innerHTML = htmlMeses;
+  const modal = new bootstrap.Modal(document.getElementById('modalAppCumpleanos'));
+  modal.show();
 }
 
 async function cargarVisitasYEventos() {
@@ -429,7 +481,6 @@ async function cargarVisitasYEventos() {
     visitasGlobales = todosLosDatos.filter(i => i.tipo === 'Visita');
     eventosGlobales = todosLosDatos.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
 
-    // Contadores de Visitas
     const hoyStr = new Date().toISOString().split("T")[0];
     const visitasHoy = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
     const mesStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
@@ -444,7 +495,6 @@ async function cargarVisitasYEventos() {
     });
     document.getElementById("listaVisitasAdmin").innerHTML = htmlV || '<p class="text-white-50 small">No hay visitas registradas.</p>';
 
-    // Contadores de Eventos
     const eventosHoy = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
     const eventosMes = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
 
@@ -502,25 +552,6 @@ function procesarCumpleanosCongregacion(data) {
   } else {
     document.getElementById("cumpleDestacadoContainer").innerHTML = `<p class="text-white-50">No hay cumpleaños registrados.</p>`;
   }
-
-  const contenedorModal = document.getElementById("listaCumpleanosModal");
-  if (contenedorModal) {
-    const mesActualNum = hoy.getMonth() + 1;
-    const cumpleDelMes = data.filter(r => {
-      if (!r.fecha_nacimiento) return false;
-      return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mesActualNum;
-    });
-
-    let html = `<h6 class="text-success">🎈 Cumpleañeros del Mes (${cumpleDelMes.length}):</h6>`;
-    if (cumpleDelMes.length > 0) {
-      cumpleDelMes.forEach(c => {
-        html += `<p class="mb-1 text-white">🎂 <b>${c.nombre_completo}</b> - ${c.fecha_nacimiento}</p>`;
-      });
-    } else {
-      html += `<p class="text-white-50 small">Ninguno este mes.</p>`;
-    }
-    contenedorModal.innerHTML = html;
-  }
 }
 
 function mostrarCumpleDestacado(index) {
@@ -554,92 +585,11 @@ function mostrarCumpleDestacado(index) {
 
   if (persona.telefono) {
     const telLimpio = persona.telefono.replace(/\D/g, '');
-    btnWsp.href = `https://wa.me/521${telLimpio}?text=¡Hola%20${encodeURIComponent(persona.nombre_completo)}!%20Te%20enviamos%20un%20caluroso%20saludo%20y%20bendiciones%20de%20parte%20de%20la%20Iglesia%20Manantial%20de%20Vida.`;
+    btnWsp.href = `https://wa.me/521${telLimpio}?text=¡Hola%20${encodeURIComponent(persona.nombre_completo)}!%20Te%20enviamos%20un%20caluroso%20saludo%20y%20bendiciones%20de%20parte%20de%20la%20Iglesia%20Manantial%20de%20Vida%20por%20tu%20próximo%20cumpleaños.`;
     btnWsp.style.display = "inline-block";
   } else {
     btnWsp.style.display = "none";
   }
-}
-
-function generarPDFCalendarioAnual(data) {
-  if (!data || data.length === 0) {
-    return alert("No hay datos en Supabase para construir el calendario.");
-  }
-
-  const mesesInfo = [
-    { nombre: "ENERO", num: 1, color: "#0099e6" },
-    { nombre: "FEBRERO", num: 2, color: "#0099e6" },
-    { nombre: "MARZO", num: 3, color: "#0099e6" },
-    { nombre: "ABRIL", num: 4, color: "#ffb300" },
-    { nombre: "MAYO", num: 5, color: "#ffb300" },
-    { nombre: "JUNIO", num: 6, color: "#ffb300" },
-    { nombre: "JULIO", num: 7, color: "#00b359" },
-    { nombre: "AGOSTO", num: 8, color: "#00b359" },
-    { nombre: "SEPTIEMBRE", num: 9, color: "#00b359" },
-    { nombre: "OCTUBRE", num: 10, color: "#ff334b" },
-    { nombre: "NOVIEMBRE", num: 11, color: "#ff334b" },
-    { nombre: "DICIEMBRE", num: 12, color: "#ff334b" }
-  ];
-
-  const gridContainer = document.getElementById("gridMesesPDF");
-  if (!gridContainer) return;
-
-  let htmlMeses = "";
-  mesesInfo.forEach((mes) => {
-    const cumpleMes = data.filter(r => {
-      if (!r.fecha_nacimiento) return false;
-      return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mes.num;
-    });
-
-    cumpleMes.sort((a, b) => {
-      return parseInt(a.fecha_nacimiento.split("-")[2], 10) - parseInt(b.fecha_nacimiento.split("-")[2], 10);
-    });
-
-    htmlMeses += `
-      <div style="width: 31%; margin-bottom: 12px; border: 1px solid #e0e0e0; border-radius: 4px; overflow: hidden; background: #ffffff;">
-        <div style="background-color: ${mes.color}; color: #ffffff; text-align: center; font-weight: bold; font-size: 11px; padding: 5px; text-transform: uppercase;">
-          ${mes.nombre}
-        </div>
-        <div style="padding: 5px; min-height: 90px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 9px; color: #333333;">
-    `;
-
-    if (cumpleMes.length === 0) {
-      htmlMeses += `<tr><td colspan="2" style="text-align: center; color: #aaa; padding: 8px;">Sin cumpleaños</td></tr>`;
-    } else {
-      cumpleMes.forEach(c => {
-        const dia = parseInt(c.fecha_nacimiento.split("-")[2], 10);
-        htmlMeses += `
-          <tr style="border-bottom: 1px solid #f0f0f0;">
-            <td style="padding: 2px; font-weight: 600; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${c.nombre_completo}</td>
-            <td style="padding: 2px; text-align: right; font-weight: bold;">${dia}</td>
-          </tr>
-        `;
-      });
-    }
-    htmlMeses += `</table></div></div>`;
-  });
-
-  gridContainer.innerHTML = htmlMeses;
-
-  const elementoPDF = document.getElementById("printCalendarioAnual");
-  const originalStyle = elementoPDF.getAttribute("style") || "";
-
-  elementoPDF.style.position = "fixed";
-  elementoPDF.style.left = "-9999px";
-  elementoPDF.style.top = "0px";
-  elementoPDF.style.width = "750px";
-  elementoPDF.style.display = "block";
-
-  html2pdf().from(elementoPDF).set({
-    margin: [8, 8, 8, 8],
-    filename: 'Calendario_Anual_Cumpleanos_Manantial.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
-  }).save().then(() => {
-    elementoPDF.setAttribute("style", originalStyle);
-  });
 }
 
 function renderizarTarjetas(data) {
@@ -735,4 +685,4 @@ function generarGrafica(data) {
       }
     }
   });
-}
+}s
