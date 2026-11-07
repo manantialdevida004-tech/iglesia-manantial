@@ -116,7 +116,7 @@
       border-left: 5px solid #10b981;
     }
 
-    /* Estilos estéticos integrados del Horario para la App de Visitas */
+    /* Estilos para modales de horarios y agendas */
     .app-container-modal {
       width: 100%;
       background-color: var(--card-color);
@@ -298,7 +298,7 @@
       </div>
     </div>
 
-    <!-- 7. ZONA DE AGENDA Y VISITAS (CAPTURA RECURRENTE) -->
+    <!-- 7. ZONA DE AGENDA Y VISITAS (VISITAS Y EVENTOS REPLICADOS) -->
     <div class="row g-4 mb-4">
       <!-- Columna Izquierda: Visitas a Congregantes -->
       <div class="col-lg-6">
@@ -321,7 +321,6 @@
             </div>
           </div>
 
-          <!-- BOTÓN PRINCIPAL PARA ABRIR LA INTERFAZ ESTILO HORARIO DE CLASES -->
           <button class="btn btn-kraft w-100 py-3 mb-3" onclick="abrirHorarioVisitasApp()">
             📅 Abrir Horario de Visitas Pastorales (Estilo App)
           </button>
@@ -352,20 +351,56 @@
         </div>
       </div>
 
-      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor -->
+      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor (REPLICADO CON FECHA, HORA Y RELEVANCIA) -->
       <div class="col-lg-6">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
           <h4 class="fw-bold text-info mb-3">📖 Agenda de Eventos y Cuentos del Pastor</h4>
-          
+          <p class="text-white-50 small">Gestión y control de eventos y narraciones pastorales.</p>
+
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Eventos hoy</small>
+                <h5 id="conteoEventosHoy" class="text-info mb-0">0</h5>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 bg-black rounded border border-secondary text-center">
+                <small class="text-white-50">Eventos este mes</small>
+                <h5 id="conteoEventosMes" class="text-success mb-0">0</h5>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-outline-info w-100 py-3 mb-3" onclick="abrirHorarioEventosApp()">
+            📅 Abrir Calendario de Eventos y Cuentos (Estilo App)
+          </button>
+
+          <!-- Zona de Captura de Evento Avanzado -->
           <div class="p-3 bg-black rounded border border-secondary mb-3">
-            <h6 class="text-gold mb-2">Capturar Evento / Cuento</h6>
+            <h6 class="text-gold mb-2">Capturar Nuevo Evento / Cuento</h6>
             <input type="text" id="eventoTitulo" class="form-control form-control-sm mb-2" placeholder="Título (Ej. Reunión especial / Cuento)">
-            <input type="datetime-local" id="eventoFecha" class="form-control form-control-sm mb-2">
-            <button id="btnGuardarEvento" class="btn btn-kraft btn-sm w-100">Guardar Evento</button>
+            
+            <div class="row g-2 mb-2">
+              <div class="col-7">
+                <input type="date" id="eventoFecha" class="form-control form-control-sm">
+              </div>
+              <div class="col-5">
+                <input type="time" id="eventoHora" class="form-control form-control-sm">
+              </div>
+            </div>
+
+            <select id="eventoRelevancia" class="form-select form-select-sm mb-2">
+              <option value="Alta (Urgente)">🔴 Relevancia: Alta (Urgente)</option>
+              <option value="Media (Especial)" selected>🟡 Relevancia: Media (Especial)</option>
+              <option value="Baja (General)">🟢 Relevancia: Baja (General)</option>
+            </select>
+
+            <button id="btnGuardarEvento" class="btn btn-kraft btn-sm w-100">Guardar Evento en Agenda</button>
           </div>
 
           <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
-          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 250px; overflow-y: auto;">
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;">
             <!-- Dinámico -->
           </div>
         </div>
@@ -374,7 +409,7 @@
 
   </div>
 
-  <!-- MODAL INTERACTIVO ESTILO HORARIO DE CLASES (APLICACIÓN DE VISITAS) -->
+  <!-- MODAL INTERACTIVO DE VISITAS (ESTILO APP) -->
   <div class="modal fade" id="modalAppVisitas" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-md">
       <div class="modal-content bg-dark text-white border-secondary p-3">
@@ -383,9 +418,7 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body p-0 pt-3">
-          
           <div class="app-container-modal p-3">
-            <!-- Simulador de Estado / Día y Hora actual -->
             <div class="sim-box" onclick="abrirSelectorSimulacion()">
               <div>
                 <h2 id="lblDiaSim" class="text-white mb-1" style="font-size: 20px;">LUNES</h2>
@@ -393,20 +426,15 @@
               </div>
               <span style="font-size: 24px;">⚙️ Simular</span>
             </div>
-
-            <!-- Estado de Visita en Curso -->
             <div class="card mb-3 p-3" style="background-color: #1e3a8a; border-radius: 14px;">
               <div class="small fw-bold text-warning mb-1">🟢 VISITA EN CURSO O PROGRAMADA AHORA</div>
               <div class="fs-5 fw-bold" id="lblVisitaActual">Sin visita en este horario</div>
               <div class="small text-white-50" id="lblInfoVisitaActual" style="display:none;"></div>
             </div>
-
             <div class="d-grid gap-2 mb-3">
               <button class="btn btn-kraft btn-sm py-2" onclick="abrirHorarioHoyVisitas()">📅 Ver Visitas de Hoy</button>
               <button class="btn btn-outline-light btn-sm py-2" onclick="abrirHorarioSemanalVisitas()">📊 Vista Semanal Completa</button>
             </div>
-
-            <!-- Pantalla Interna: Día Específico -->
             <div id="subPantallaDia" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 id="tituloHorarioDiaVisita" class="text-gold mb-0">Horario del Día</h6>
@@ -414,8 +442,6 @@
               </div>
               <div id="listaVisitasDiaModal" style="max-height: 220px; overflow-y: auto;"></div>
             </div>
-
-            <!-- Pantalla Interna: Semana Completa con Tabs -->
             <div id="subPantallaSemana" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
               <div class="d-flex justify-content-between align-items-center mb-2">
                 <h6 class="text-gold mb-0">Vista Semanal</h6>
@@ -431,9 +457,35 @@
               </div>
               <div id="listaVisitasSemanaModal" style="max-height: 200px; overflow-y: auto;"></div>
             </div>
-
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- MODAL INTERACTIVO DE EVENTOS (ESTILO APP REPLICADO) -->
+  <div class="modal fade" id="modalAppEventos" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+      <div class="modal-content bg-dark text-white border-secondary p-3">
+        <div class="modal-header border-secondary pb-2">
+          <h5 class="text-info fw-bold">⚙️ Calendario Interactivo de Eventos del Pastor</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0 pt-3">
+          <div class="app-container-modal p-3">
+            <div class="card mb-3 p-3" style="background-color: #0f172a; border: 1.5px solid #38bdf8; border-radius: 14px;">
+              <div class="small fw-bold text-info mb-1">📖 PRÓXIMO EVENTO DESTACADO</div>
+              <div class="fs-5 fw-bold" id="lblEventoDestacadoApp">Sin eventos próximos</div>
+              <div class="small text-white-50 mt-1" id="lblInfoEventoDestacado">Revisa el listado completo abajo.</div>
+            </div>
+            <div class="d-grid gap-2 mb-3">
+              <button class="btn btn-outline-info btn-sm py-2" onclick="abrirEventosProximosModal()">📋 Listado Completo de Eventos</button>
+            </div>
+            <div id="subPantallaEventosLista" style="display:block; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
+              <h6 class="text-info mb-2">Agenda Global de Eventos y Cuentos:</h6>
+              <div id="listaEventosModalApp" style="max-height: 250px; overflow-y: auto;"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -504,7 +556,7 @@
     </div>
   </div>
 
-  <!-- CONTENEDOR OCULTO PARA GENERAR EL PDF DEL CALENDARIO ANUAL -->
+  <!-- CONTENEDOR OCULTO PARA PDF ANUAL -->
   <div id="printCalendarioAnual" style="display: none; width: 750px; background: #ffffff; padding: 15px; color: #000000;">
     <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #0099e6; padding-bottom: 8px;">
       <h2 style="margin: 0; color: #0099e6; font-size: 20px; font-weight: bold; text-transform: uppercase;">Calendario Anual de Cumpleaños 2026</h2>
