@@ -3,6 +3,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
 
 let registrosGlobales = [];
 let visitasGlobales = [];
+let eventosGlobales = [];
 let miGrafica = null;
 let indiceCumpleActual = 0;
 let listaCumpleanosOrdenados = [];
@@ -66,15 +67,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnGuardarVisita) {
     btnGuardarVisita.addEventListener("click", async () => {
       const nombre = document.getElementById("visitaNombre").value.trim();
-      const diaSemana = document.getElementById("visitaDiaSemana").value; // Ej. Jueves
-      const hora = document.getElementById("visitaHora").value; // Ej. 18:00
+      const diaSemana = document.getElementById("visitaDiaSemana").value;
+      const hora = document.getElementById("visitaHora").value;
 
       if (!nombre || !diaSemana || !hora) {
         return alert("Por favor ingresa el nombre, selecciona el día de la semana y la hora.");
       }
 
       const tituloVisita = `Visita a ${nombre} (${diaSemana}s a las ${hora})`;
-      // Guardamos la fecha actual o base con la hora seleccionada para el registro en BD
       const fechaBase = new Date().toISOString().split('T')[0] + `T${hora}:00Z`;
 
       try {
@@ -96,10 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(payload)
         });
 
-        if (!res.ok) {
-          const errJson = await res.json().catch(() => ({}));
-          throw new Error(errJson.message || "Error al insertar en la base de datos");
-        }
+        if (!res.ok) throw new Error("Error al insertar visita");
 
         alert("¡Visita pastoral guardada y sincronizada correctamente!");
         document.getElementById("visitaNombre").value = "";
@@ -107,25 +104,32 @@ document.addEventListener("DOMContentLoaded", () => {
         cargarVisitasYEventos();
       } catch (err) {
         console.error("Error al guardar visita:", err);
-        alert("Error al conectar con la base de datos: " + err.message);
+        alert("Error al conectar con la base de datos.");
       }
     });
   }
 
-  // Guardar Evento del Pastor
+  // Guardar Evento del Pastor Avanzado (Con Fecha, Hora y Relevancia)
   const btnGuardarEvento = document.getElementById("btnGuardarEvento");
   if (btnGuardarEvento) {
     btnGuardarEvento.addEventListener("click", async () => {
       const titulo = document.getElementById("eventoTitulo").value.trim();
       const fecha = document.getElementById("eventoFecha").value;
-      if (!titulo || !fecha) return alert("Por favor completa los campos del evento.");
+      const hora = document.getElementById("eventoHora").value;
+      const relevancia = document.getElementById("eventoRelevancia").value;
+
+      if (!titulo || !fecha || !hora) {
+        return alert("Por favor completa el título, la fecha y la hora del evento.");
+      }
+
+      const fechaHoraCompleta = `${fecha}T${hora}:00Z`;
 
       try {
         const payload = {
           titulo: titulo,
-          fecha_hora: fecha,
+          fecha_hora: fechaHoraCompleta,
           tipo: 'EventoPastor',
-          descripcion: 'Evento general'
+          descripcion: `Relevancia: ${relevancia}`
         };
 
         const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor`, {
@@ -141,13 +145,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!res.ok) throw new Error("Error al guardar evento");
 
-        alert("Evento guardado exitosamente.");
+        alert("¡Evento guardado y sincronizado correctamente!");
         document.getElementById("eventoTitulo").value = "";
         document.getElementById("eventoFecha").value = "";
+        document.getElementById("eventoHora").value = "";
         cargarVisitasYEventos();
       } catch (err) {
-        console.error(err);
-        alert("Error al guardar el evento.");
+        console.error("Error al guardar evento:", err);
+        alert("Error al conectar con la base de datos.");
       }
     });
   }
@@ -203,7 +208,7 @@ function actualizarKPIs(data) {
 }
 
 /* =========================================================
-   SISTEMA INTERACTIVO DE VISITAS (ESTILO HORARIO DE CLASES)
+   SISTEMA DE VISITAS (ESTILO APP)
    ========================================================= */
 
 function abrirHorarioVisitasApp() {
@@ -363,6 +368,53 @@ function cerrarSubPantallaVisitas() {
   document.getElementById('subPantallaSemana').style.display = 'none';
 }
 
+/* =========================================================
+   SISTEMA DE EVENTOS DEL PASTOR (ESTILO APP REPLICADO)
+   ========================================================= */
+
+function abrirHorarioEventosApp() {
+  actualizarUIEventosApp();
+  const modal = new bootstrap.Modal(document.getElementById('modalAppEventos'));
+  modal.show();
+}
+
+function actualizarUIEventosApp() {
+  const contenedor = document.getElementById('listaEventosModalApp');
+  const lblDestacado = document.getElementById('lblEventoDestacadoApp');
+  const lblInfoDestacado = document.getElementById('lblInfoEventoDestacado');
+
+  if (eventosGlobales.length === 0) {
+    lblDestacado.innerText = "Sin eventos próximos";
+    lblInfoDestacado.innerText = "Crea un nuevo evento desde el panel principal.";
+    contenedor.innerHTML = '<div class="text-white-50 text-center py-3 small">No hay eventos registrados en la agenda.</div>';
+    return;
+  }
+
+  // Tomar el primer evento como destacado
+  const proximo = eventosGlobales[0];
+  lblDestacado.innerText = proximo.titulo;
+  lblInfoDestacado.innerText = `📅 ${proximo.fecha_hora ? proximo.fecha_hora.replace('T', ' ').substring(0, 16) : ''} • ${proximo.descripcion || ''}`;
+
+  let htmlE = "";
+  eventosGlobales.forEach(e => {
+    const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
+    htmlE += `
+      <div class="class-item py-2 mb-2">
+        <div class="class-info" style="flex:1;">
+          <h6 class="text-white mb-1 fw-bold">${e.titulo}</h6>
+          <p class="time mb-0 small" style="color: #38bdf8;">📅 ${fechaLimpia} hrs</p>
+          <small class="text-white-50" style="font-size: 11px;">${e.descripcion || ''}</small>
+        </div>
+      </div>
+    `;
+  });
+  contenedor.innerHTML = htmlE;
+}
+
+function abrirEventosProximosModal() {
+  // Ya muestra por defecto el listado completo en el modal
+}
+
 async function cargarVisitasYEventos() {
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor?select=*`, {
@@ -372,29 +424,37 @@ async function cargarVisitasYEventos() {
       }
     });
     if (!res.ok) throw new Error("Error al obtener la agenda");
-    visitasGlobales = await res.json();
+    const todosLosDatos = await res.json();
 
-    const visitas = visitasGlobales.filter(i => i.tipo === 'Visita');
-    const eventos = visitasGlobales.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
+    visitasGlobales = todosLosDatos.filter(i => i.tipo === 'Visita');
+    eventosGlobales = todosLosDatos.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
 
-    // Contadores basados en registros reales
+    // Contadores de Visitas
     const hoyStr = new Date().toISOString().split("T")[0];
-    const visitasHoy = visitas.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
+    const visitasHoy = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
     const mesStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
-    const visitasMes = visitas.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
+    const visitasMes = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
 
     document.getElementById("conteoVisitasHoy").textContent = visitasHoy;
     document.getElementById("conteoVisitasMes").textContent = visitasMes;
 
     let htmlV = "";
-    visitas.forEach(v => {
+    visitasGlobales.forEach(v => {
       htmlV += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📍 <b>${v.titulo}</b><br><small class="text-warning">${v.descripcion || v.fecha_hora || ''}</small></div>`;
     });
     document.getElementById("listaVisitasAdmin").innerHTML = htmlV || '<p class="text-white-50 small">No hay visitas registradas.</p>';
 
+    // Contadores de Eventos
+    const eventosHoy = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
+    const eventosMes = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
+
+    document.getElementById("conteoEventosHoy").textContent = eventosHoy;
+    document.getElementById("conteoEventosMes").textContent = eventosMes;
+
     let htmlE = "";
-    eventos.forEach(e => {
-      htmlE += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📖 <b>${e.titulo}</b><br><small class="text-info">${e.fecha_hora || ''}</small></div>`;
+    eventosGlobales.forEach(e => {
+      const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
+      htmlE += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📖 <b>${e.titulo}</b><br><small class="text-info">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small></div>`;
     });
     document.getElementById("listaEventosAdmin").innerHTML = htmlE || '<p class="text-white-50 small">No hay eventos o cuentos registrados.</p>';
 
