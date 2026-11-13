@@ -132,29 +132,6 @@
       cursor: pointer;
       margin-bottom: 12px;
     }
-
-    .class-item {
-      background-color: var(--container-bg);
-      border-radius: 16px;
-      padding: 14px 16px;
-      border: 1px solid rgba(255,255,255,0.1);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 10px;
-    }
-
-    .class-item input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--primary-color);
-      cursor: pointer;
-    }
-
-    .completed h6 {
-      color: var(--text-grey) !important;
-      text-decoration: line-through;
-    }
   </style>
 </head>
 <body>
@@ -336,7 +313,7 @@
           </div>
 
           <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
-          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
+          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 220px; overflow-y: auto;"></div>
         </div>
       </div>
 
@@ -388,7 +365,7 @@
           </div>
 
           <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
-          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
+          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 220px; overflow-y: auto;"></div>
         </div>
       </div>
     </div>
@@ -417,32 +394,6 @@
               <div class="fs-5 fw-bold" id="lblVisitaActual">Sin visita en este horario</div>
               <div class="small text-white-50" id="lblInfoVisitaActual" style="display:none;"></div>
             </div>
-            <div class="d-grid gap-2 mb-3">
-              <button class="btn btn-kraft btn-sm py-2" onclick="abrirHorarioHoyVisitas()">📅 Ver Visitas de Hoy</button>
-              <button class="btn btn-outline-light btn-sm py-2" onclick="abrirHorarioSemanalVisitas()">📊 Vista Semanal Completa</button>
-            </div>
-            <div id="subPantallaDia" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 id="tituloHorarioDiaVisita" class="text-gold mb-0">Horario del Día</h6>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
-              </div>
-              <div id="listaVisitasDiaModal" style="max-height: 220px; overflow-y: auto;"></div>
-            </div>
-            <div id="subPantallaSemana" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="text-gold mb-0">Vista Semanal</h6>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
-              </div>
-              <div class="tabs mb-2 rounded">
-                <div class="tab active" onclick="cambiarTabVisitasSemana(1)">Lun</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(2)">Mar</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(3)">Mié</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(4)">Jue</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(5)">Vie</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(6)">Sáb</div>
-              </div>
-              <div id="listaVisitasSemanaModal" style="max-height: 200px; overflow-y: auto;"></div>
-            </div>
           </div>
         </div>
       </div>
@@ -462,10 +413,6 @@
               <div class="small fw-bold text-info mb-1">📖 PRÓXIMO EVENTO DESTACADO</div>
               <div class="fs-5 fw-bold" id="lblEventoDestacadoApp">Sin eventos próximos</div>
               <div class="small text-white-50 mt-1" id="lblInfoEventoDestacado">Revisa el listado completo abajo.</div>
-            </div>
-            <div id="subPantallaEventosLista" style="display:block; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <h6 class="text-info mb-2">Agenda de Eventos y Encuentros:</h6>
-              <div id="listaEventosModalApp" style="max-height: 250px; overflow-y: auto;"></div>
             </div>
           </div>
         </div>
@@ -577,33 +524,6 @@
           <button class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancelar</button>
           <button class="btn btn-kraft btn-sm w-50" onclick="guardarCambiosAgenda()">Guardar Cambios</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE SIMULACIÓN -->
-  <div class="modal fade" id="modalSimulacionTiempo" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <h6 class="text-gold fw-bold mb-3">⚙️ Simular Tiempo</h6>
-        <div class="mb-2">
-          <select id="selectSimDia" class="form-select form-select-sm">
-            <option value="1">Lunes</option>
-            <option value="2">Martes</option>
-            <option value="3">Miércoles</option>
-            <option value="4">Jueves</option>
-            <option value="5">Viernes</option>
-            <option value="6">Sábado</option>
-            <option value="7">Domingo</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <input type="number" id="inputSimHora" class="form-control form-control-sm" min="0" max="23" placeholder="Hora">
-        </div>
-        <div class="mb-3">
-          <input type="number" id="inputSimMinuto" class="form-control form-control-sm" min="0" max="59" placeholder="Minuto">
-        </div>
-        <button class="btn btn-kraft btn-sm w-100" onclick="aplicarSimulacionVisitas()">Aplicar</button>
       </div>
     </div>
   </div>
