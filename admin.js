@@ -4,6 +4,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
 let registrosGlobales = [];
 let visitasGlobales = [];
 let eventosGlobales = [];
+let agendaCompletaGlobal = [];
 let miGrafica = null;
 let indiceCumpleActual = 0;
 let listaCumpleanosOrdenados = [];
@@ -404,6 +405,7 @@ async function cargarVisitasYEventos() {
     if (!res.ok) return;
     const todos = await res.json();
 
+    agendaCompletaGlobal = todos;
     visitasGlobales = todos.filter(i => i.tipo === 'Visita');
     eventosGlobales = todos.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
 
@@ -413,7 +415,7 @@ async function cargarVisitasYEventos() {
     document.getElementById("conteoVisitasHoy").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoVisitasMes").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
 
-    // Renderizar Visitas con botones Editar / Eliminar
+    // Renderizar Visitas pasando solo el ID
     let htmlV = "";
     visitasGlobales.forEach(v => {
       htmlV += `
@@ -422,8 +424,8 @@ async function cargarVisitasYEventos() {
             📍 <b>${v.titulo}</b><br><small class="text-warning">${v.descripcion || ''}</small>
           </div>
           <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick='abrirModalEditarAgenda(${JSON.stringify(v)})'>✏️</button>
-            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick='eliminarItemAgenda(${v.id})'>🗑️</button>
+            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="abrirModalEditarAgenda(${v.id})">✏️</button>
+            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="eliminarItemAgenda(${v.id})">🗑️</button>
           </div>
         </div>`;
     });
@@ -432,7 +434,7 @@ async function cargarVisitasYEventos() {
     document.getElementById("conteoEventosHoy").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoEventosMes").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
 
-    // Renderizar Eventos con botones Editar / Eliminar
+    // Renderizar Eventos pasando solo el ID
     let htmlE = "";
     eventosGlobales.forEach(e => {
       const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
@@ -442,8 +444,8 @@ async function cargarVisitasYEventos() {
             📖 <b>${e.titulo}</b><br><small class="text-info">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small>
           </div>
           <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick='abrirModalEditarAgenda(${JSON.stringify(e)})'>✏️</button>
-            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick='eliminarItemAgenda(${e.id})'>🗑️</button>
+            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="abrirModalEditarAgenda(${e.id})">✏️</button>
+            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="eliminarItemAgenda(${e.id})">🗑️</button>
           </div>
         </div>`;
     });
@@ -453,7 +455,10 @@ async function cargarVisitasYEventos() {
   }
 }
 
-function abrirModalEditarAgenda(item) {
+function abrirModalEditarAgenda(id) {
+  const item = agendaCompletaGlobal.find(i => i.id === id);
+  if (!item) return;
+
   document.getElementById("editAgendaId").value = item.id;
   document.getElementById("editAgendaTipo").value = item.tipo || 'EventoPastor';
   document.getElementById("editAgendaTitulo").value = item.titulo || '';
