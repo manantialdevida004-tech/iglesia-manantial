@@ -181,34 +181,42 @@
     <!-- CONTENEDOR DE ALERTAS -->
     <div id="adminAlertas"></div>
 
-    <!-- 2. ZONA DE DASHBOARD (KPIs ACTUALIZADOS CON SEPARACIÓN) -->
+    <!-- 2. ZONA DE DASHBOARD (KPIs SEPARADOS) -->
     <div class="row g-3 mb-4">
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Total Registrados</small>
-          <h2 id="kpiTotal" class="fw-bold text-white mt-2">0</h2>
+      <div class="col-md-2 col-4">
+        <div class="card card-kpi p-2 text-center">
+          <small class="text-white-50 text-uppercase fw-bold" style="font-size: 11px;">Total</small>
+          <h3 id="kpiTotal" class="fw-bold text-white mt-1 mb-0">0</h3>
         </div>
       </div>
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Congregantes</small>
-          <h2 id="kpiCongregantes" class="fw-bold text-gold mt-2">0</h2>
+      <div class="col-md-2 col-4">
+        <div class="card card-kpi p-2 text-center">
+          <small class="text-white-50 text-uppercase fw-bold" style="font-size: 11px;">Congregantes</small>
+          <h3 id="kpiCongregantes" class="fw-bold text-gold mt-1 mb-0">0</h3>
         </div>
       </div>
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Jóv. / Niños / Adol.</small>
-          <div class="d-flex justify-content-around mt-2">
-            <span class="small text-info" title="Jóvenes">J: <strong id="kpiJovenes">0</strong></span>
-            <span class="small text-warning" title="Niños">N: <strong id="kpiNinos">0</strong></span>
-            <span class="small text-success" title="Adolescentes">A: <strong id="kpiAdolescentes">0</strong></span>
-          </div>
+      <div class="col-md-2 col-4">
+        <div class="card card-kpi p-2 text-center">
+          <small class="text-white-50 text-uppercase fw-bold" style="font-size: 11px;">Jóvenes</small>
+          <h3 id="kpiJovenes" class="fw-bold text-info mt-1 mb-0">0</h3>
         </div>
       </div>
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Cumpleaños Mes</small>
-          <h2 id="kpiCumple" class="fw-bold text-success mt-2">0</h2>
+      <div class="col-md-2 col-4">
+        <div class="card card-kpi p-2 text-center">
+          <small class="text-white-50 text-uppercase fw-bold" style="font-size: 11px;">Niños</small>
+          <h3 id="kpiNinos" class="fw-bold text-warning mt-1 mb-0">0</h3>
+        </div>
+      </div>
+      <div class="col-md-2 col-4">
+        <div class="card card-kpi p-2 text-center">
+          <small class="text-white-50 text-uppercase fw-bold" style="font-size: 11px;">Adolescentes</small>
+          <h3 id="kpiAdolescentes" class="fw-bold text-success mt-1 mb-0">0</h3>
+        </div>
+      </div>
+      <div class="col-md-2 col-4">
+        <div class="card card-kpi p-2 text-center">
+          <small class="text-white-50 text-uppercase fw-bold" style="font-size: 11px;">Cumple Mes</small>
+          <h3 id="kpiCumple" class="fw-bold text-danger mt-1 mb-0">0</h3>
         </div>
       </div>
     </div>
@@ -225,8 +233,8 @@
       </div>
     </div>
 
-    <!-- 4. ZONA DE BUSCADOR, ATAJOS Y DESCARGAS (BOTÓN SOBRANTE ELIMINADO) -->
-    <div class="row g-3 mb-4 align-items-center">
+    <!-- 4. ZONA DE BUSCADOR, FILTROS Y DESCARGAS -->
+    <div class="row g-3 mb-3 align-items-center">
       <div class="col-lg-6">
         <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
       </div>
@@ -234,6 +242,16 @@
         <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel Directorio</button>
         <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF Directorio</button>
       </div>
+    </div>
+
+    <!-- ZONA DE FILTROS RÁPIDOS -->
+    <div class="d-flex gap-2 flex-wrap mb-4" id="contenedorFiltros">
+      <button class="btn btn-sm btn-kraft filtro-btn active" data-filtro="todos">🌐 Todos</button>
+      <button class="btn btn-sm btn-outline-light filtro-btn" data-filtro="Congregantes / Adultos">👥 Congregantes</button>
+      <button class="btn btn-sm btn-outline-light filtro-btn" data-filtro="Jóvenes">🌟 Jóvenes</button>
+      <button class="btn btn-sm btn-outline-light filtro-btn" data-filtro="Niños">🎈 Niños</button>
+      <button class="btn btn-sm btn-outline-light filtro-btn" data-filtro="adolescente">⚡ Adolescentes</button>
+      <button class="btn btn-sm btn-outline-light filtro-btn" data-filtro="Visita">🏡 Visitas</button>
     </div>
 
     <!-- 5. DIRECTORIO DE CONGREGANTES -->
@@ -472,7 +490,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE DETALLE Y EDICIÓN -->
+  <!-- MODAL DE DETALLE -->
   <div class="modal fade" id="modalDetalle" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content bg-dark text-white border-secondary">
