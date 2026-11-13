@@ -413,23 +413,124 @@ async function cargarVisitasYEventos() {
     document.getElementById("conteoVisitasHoy").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoVisitasMes").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
 
+    // Renderizar Visitas con botones Editar / Eliminar
     let htmlV = "";
     visitasGlobales.forEach(v => {
-      htmlV += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📍 <b>${v.titulo}</b><br><small class="text-warning">${v.descripcion || ''}</small></div>`;
+      htmlV += `
+        <div class="list-group-item bg-dark text-white border-secondary mb-2 rounded p-2 d-flex justify-content-between align-items-center">
+          <div>
+            📍 <b>${v.titulo}</b><br><small class="text-warning">${v.descripcion || ''}</small>
+          </div>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick='abrirModalEditarAgenda(${JSON.stringify(v)})'>✏️</button>
+            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick='eliminarItemAgenda(${v.id})'>🗑️</button>
+          </div>
+        </div>`;
     });
     document.getElementById("listaVisitasAdmin").innerHTML = htmlV || '<p class="text-white-50 small">Sin visitas.</p>';
 
     document.getElementById("conteoEventosHoy").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoEventosMes").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
 
+    // Renderizar Eventos con botones Editar / Eliminar
     let htmlE = "";
     eventosGlobales.forEach(e => {
       const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
-      htmlE += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📖 <b>${e.titulo}</b><br><small class="text-info">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small></div>`;
+      htmlE += `
+        <div class="list-group-item bg-dark text-white border-secondary mb-2 rounded p-2 d-flex justify-content-between align-items-center">
+          <div>
+            📖 <b>${e.titulo}</b><br><small class="text-info">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small>
+          </div>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick='abrirModalEditarAgenda(${JSON.stringify(e)})'>✏️</button>
+            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick='eliminarItemAgenda(${e.id})'>🗑️</button>
+          </div>
+        </div>`;
     });
     document.getElementById("listaEventosAdmin").innerHTML = htmlE || '<p class="text-white-50 small">Sin eventos.</p>';
   } catch (err) {
     console.error(err);
+  }
+}
+
+function abrirModalEditarAgenda(item) {
+  document.getElementById("editAgendaId").value = item.id;
+  document.getElementById("editAgendaTipo").value = item.tipo || 'EventoPastor';
+  document.getElementById("editAgendaTitulo").value = item.titulo || '';
+  
+  if (item.fecha_hora) {
+    const fechaLimpia = item.fecha_hora.replace('Z', '').substring(0, 16);
+    document.getElementById("editAgendaFechaHora").value = fechaLimpia;
+  } else {
+    document.getElementById("editAgendaFechaHora").value = '';
+  }
+
+  document.getElementById("editAgendaDescripcion").value = item.descripcion || '';
+
+  const modal = new bootstrap.Modal(document.getElementById("modalEdicionAgenda"));
+  modal.show();
+}
+
+async function guardarCambiosAgenda() {
+  const id = document.getElementById("editAgendaId").value;
+  const tipo = document.getElementById("editAgendaTipo").value;
+  const titulo = document.getElementById("editAgendaTitulo").value.trim();
+  const fechaHoraInput = document.getElementById("editAgendaFechaHora").value;
+  const descripcion = document.getElementById("editAgendaDescripcion").value.trim();
+
+  if (!titulo || !fechaHoraInput) {
+    return alert("El título y la fecha/hora son obligatorios.");
+  }
+
+  const payload = {
+    titulo: titulo,
+    fecha_hora: `${fechaHoraInput}:00Z`,
+    tipo: tipo,
+    descripcion: descripcion
+  };
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor?id=eq.${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("Error al actualizar");
+
+    alert("¡Registro de agenda actualizado con éxito!");
+    bootstrap.Modal.getInstance(document.getElementById("modalEdicionAgenda")).hide();
+    cargarVisitasYEventos();
+  } catch (err) {
+    console.error(err);
+    alert("Error al conectar con la base de datos.");
+  }
+}
+
+async function eliminarItemAgenda(id) {
+  if (!confirm("¿Estás seguro de eliminar este registro de la agenda?")) return;
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor?id=eq.${id}`, {
+      method: "DELETE",
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+
+    if (!res.ok) throw new Error("Error al eliminar");
+
+    alert("Registro eliminado correctamente.");
+    cargarVisitasYEventos();
+  } catch (err) {
+    console.error(err);
+    alert("Error al eliminar el registro.");
   }
 }
 
