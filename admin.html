@@ -510,7 +510,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE EDICIÓN -->
+  <!-- MODAL DE EDICIÓN CONGREGANTE -->
   <div class="modal fade" id="modalEdicion" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content bg-dark text-white border-secondary p-3">
@@ -545,6 +545,37 @@
         <div class="d-flex gap-2">
           <button class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancelar</button>
           <button class="btn btn-kraft btn-sm w-50" onclick="guardarEdicionCongregante()">Guardar Cambios</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE EDICIÓN DE AGENDA (VISITAS / EVENTOS) -->
+  <div class="modal fade" id="modalEdicionAgenda" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white border-secondary p-3">
+        <h5 class="text-gold fw-bold mb-3">✏️ Editar Registro de Agenda</h5>
+        <input type="hidden" id="editAgendaId">
+        <input type="hidden" id="editAgendaTipo">
+        
+        <div class="mb-2">
+          <label class="small text-white-50">Título / Nombre</label>
+          <input type="text" id="editAgendaTitulo" class="form-control form-control-sm">
+        </div>
+        
+        <div class="mb-2">
+          <label class="small text-white-50">Fecha y Hora</label>
+          <input type="datetime-local" id="editAgendaFechaHora" class="form-control form-control-sm">
+        </div>
+
+        <div class="mb-3">
+          <label class="small text-white-50">Descripción / Detalles</label>
+          <input type="text" id="editAgendaDescripcion" class="form-control form-control-sm">
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-kraft btn-sm w-50" onclick="guardarCambiosAgenda()">Guardar Cambios</button>
         </div>
       </div>
     </div>
