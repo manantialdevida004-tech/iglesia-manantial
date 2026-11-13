@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Manantial de Vida</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Chart.js para gráficas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -13,19 +12,15 @@
       --primary-color: #cbb281;
       --card-color: #111827;
       --container-bg: #0f172a;
-      --current-class-bg: #1e3a8a;
       --text-white: #FFFFFF;
       --text-grey: #9ca3af;
-      --accent-red: #f59e0b;
     }
-
     body {
       background-color: var(--bg-color);
       color: var(--text-white);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       overflow-x: hidden;
     }
-
     .navbar-custom {
       background-color: #0f172a !important;
       border-bottom: 2px solid #1e3a8a;
@@ -33,22 +28,8 @@
       top: 0;
       z-index: 1030;
     }
-
-    h1, h2, h3, h4, h5, h6, label, p, span, small {
-      color: #f8fafc !important;
-    }
-    .text-gold {
-      color: #cbb281 !important;
-    }
-
-    .fade-in-up {
-      animation: fadeInUp 0.6s ease-in-up;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
+    h1, h2, h3, h4, h5, h6, label, p, span, small { color: #f8fafc !important; }
+    .text-gold { color: #cbb281 !important; }
     .card-kpi {
       background-color: #111827;
       border: 1px solid #374151;
@@ -56,11 +37,6 @@
       border-radius: 12px;
       transition: all 0.3s ease;
     }
-    .card-kpi:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
-    }
-
     .card-preview {
       background-color: #111827;
       border: 1px solid #374151;
@@ -73,7 +49,6 @@
       transform: translateY(-3px);
       box-shadow: 0 8px 20px rgba(203, 178, 129, 0.25);
     }
-
     .form-control, .form-select {
       background-color: #0f172a;
       border: 1px solid #4b5563;
@@ -83,13 +58,8 @@
     .form-control:focus, .form-select:focus {
       background-color: #0f172a;
       border-color: #cbb281;
-      color: #ffffff;
       box-shadow: 0 0 0 0.25rem rgba(203, 178, 129, 0.25);
     }
-    .form-control::placeholder {
-      color: #9ca3af;
-    }
-
     .btn-kraft {
       background-color: #cbb281;
       color: #080c14;
@@ -101,65 +71,11 @@
     .btn-kraft:hover {
       background-color: #b39762;
       color: #ffffff;
-      transform: translateY(-2px);
-    }
-
-    .card-cumple-destacado {
-      background-color: #111827;
-      border: 1px solid #374151;
-      border-radius: 12px;
-      border-left: 5px solid #10b981;
-    }
-
-    .app-container-modal {
-      width: 100%;
-      background-color: var(--card-color);
-      display: flex;
-      flex-direction: column;
-      border-radius: 12px;
-      overflow: hidden;
-      min-height: 450px;
-    }
-
-    .sim-box {
-      background-color: var(--container-bg);
-      border: 1.5px solid var(--primary-color);
-      border-radius: 16px;
-      padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      margin-bottom: 12px;
-    }
-
-    .class-item {
-      background-color: var(--container-bg);
-      border-radius: 16px;
-      padding: 14px 16px;
-      border: 1px solid rgba(255,255,255,0.1);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 10px;
-    }
-
-    .class-item input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--primary-color);
-      cursor: pointer;
-    }
-
-    .completed h6 {
-      color: var(--text-grey) !important;
-      text-decoration: line-through;
     }
   </style>
 </head>
 <body>
 
-  <!-- 1. ENCABEZADO FIJO SUPERIOR -->
   <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 shadow">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
@@ -176,12 +92,9 @@
     </div>
   </nav>
 
-  <div class="container my-4 fade-in-up">
+  <div class="container my-4">
 
-    <!-- CONTENEDOR DE ALERTAS -->
-    <div id="adminAlertas"></div>
-
-    <!-- 2. ZONA DE DASHBOARD (KPIs SEPARADOS) -->
+    <!-- KPIs SEPARADOS -->
     <div class="row g-3 mb-4">
       <div class="col-md-2 col-4">
         <div class="card card-kpi p-2 text-center">
@@ -221,7 +134,7 @@
       </div>
     </div>
 
-    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN POR SECCIONES -->
+    <!-- GRÁFICA -->
     <div class="row g-4 mb-4">
       <div class="col-lg-12">
         <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
@@ -233,7 +146,7 @@
       </div>
     </div>
 
-    <!-- 4. ZONA DE BUSCADOR, FILTROS Y DESCARGAS -->
+    <!-- BUSCADOR Y BOTONES EXPORTAR -->
     <div class="row g-3 mb-3 align-items-center">
       <div class="col-lg-6">
         <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
@@ -244,7 +157,7 @@
       </div>
     </div>
 
-    <!-- ZONA DE FILTROS RÁPIDOS -->
+    <!-- ZONA DE FILTROS RÁPIDOS FUNCIONALES -->
     <div class="d-flex gap-2 flex-wrap mb-4" id="contenedorFiltros">
       <button class="btn btn-sm btn-kraft filtro-btn active" data-filtro="todos">🌐 Todos</button>
       <button class="btn btn-sm btn-outline-light filtro-btn" data-filtro="Congregantes / Adultos">👥 Congregantes</button>
@@ -254,240 +167,14 @@
       <button class="btn btn-sm btn-outline-light filtro-btn" data-filtro="Visita">🏡 Visitas</button>
     </div>
 
-    <!-- 5. DIRECTORIO DE CONGREGANTES -->
+    <!-- DIRECTORIO DE CONGREGANTES -->
     <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-5">
-      <h4 class="fw-bold text-gold mb-3">📋 Directorio de Congregantes (Haz clic para ver detalles o editar)</h4>
+      <h4 class="fw-bold text-gold mb-3">📋 Directorio de Congregantes</h4>
       <div id="listaTarjetas" class="row g-3">
         <p class="text-white-50 text-center py-3">Cargando registros...</p>
       </div>
     </div>
 
-    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN -->
-    <div class="row g-4 mb-5">
-      <div class="col-lg-7">
-        <div class="card card-cumple-destacado p-4 shadow h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold text-success mb-0">🎉 Cumpleaños de la Congregación</h4>
-            <span id="badgeDiasRestantes" class="badge bg-success text-dark">Calculando...</span>
-          </div>
-          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
-            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
-            <span class="text-white-50">Cargando cumpleañero más próximo...</span>
-          </div>
-          <div class="d-flex gap-2 flex-wrap">
-            <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
-            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Próximo ➡️</button>
-            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Mensaje WhatsApp</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-5">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
-          <h5 class="text-gold fw-bold">🎈 Calendarios de Cumpleaños</h5>
-          <p class="text-white-50 small mb-0">Visualiza la agenda festiva anual ordenada mes a mes.</p>
-          <button class="btn btn-kraft w-100 py-2" onclick="abrirCalendarioCumpleanosApp()">🎂 Abrir Calendario Anual de Cumpleaños</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 7. ZONA DE AGENDA Y VISITAS (VISITAS Y EVENTOS) -->
-    <div class="row g-4 mb-4">
-      <!-- Columna Izquierda: Visitas a Congregantes -->
-      <div class="col-lg-6">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
-          <h4 class="fw-bold text-warning mb-3">🏡 Agenda de Visitas a Congregantes</h4>
-          <p class="text-white-50 small">Control interactivo de visitas pastorales domiciliarias.</p>
-          
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Visitas hoy</small>
-                <h5 id="conteoVisitasHoy" class="text-warning mb-0">0</h5>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Visitas este mes</small>
-                <h5 id="conteoVisitasMes" class="text-success mb-0">0</h5>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn btn-kraft w-100 py-3 mb-3" onclick="abrirHorarioVisitasApp()">
-            📅 Abrir Horario de Visitas Pastorales
-          </button>
-
-          <div class="p-3 bg-black rounded border border-secondary mb-3">
-            <h6 class="text-gold mb-2">Capturar Nueva Visita (Semanal)</h6>
-            <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante (Ej. Pepe)">
-            
-            <select id="visitaDiaSemana" class="form-select form-select-sm mb-2">
-              <option value="Lunes">Lunes</option>
-              <option value="Martes">Martes</option>
-              <option value="Miércoles">Miércoles</option>
-              <option value="Jueves">Jueves</option>
-              <option value="Viernes">Viernes</option>
-              <option value="Sábado">Sábado</option>
-              <option value="Domingo">Domingo</option>
-            </select>
-
-            <input type="time" id="visitaHora" class="form-control form-control-sm mb-2">
-            <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita Recurrente</button>
-          </div>
-
-          <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
-          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
-        </div>
-      </div>
-
-      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor -->
-      <div class="col-lg-6">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
-          <h4 class="fw-bold text-info mb-3">📖 Agenda de Eventos y Encuentros del Pastor</h4>
-          <p class="text-white-50 small">Gestión y control de eventos y narraciones pastorales.</p>
-
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Eventos hoy</small>
-                <h5 id="conteoEventosHoy" class="text-info mb-0">0</h5>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Eventos este mes</small>
-                <h5 id="conteoEventosMes" class="text-success mb-0">0</h5>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn btn-outline-info w-100 py-3 mb-3" onclick="abrirHorarioEventosApp()">
-            📅 Abrir Calendario de Eventos y Cuentos
-          </button>
-
-          <div class="p-3 bg-black rounded border border-secondary mb-3">
-            <h6 class="text-gold mb-2">Capturar Nuevo Evento / Cuento</h6>
-            <input type="text" id="eventoTitulo" class="form-control form-control-sm mb-2" placeholder="Título (Ej. Reunión especial / Cuento)">
-            
-            <div class="row g-2 mb-2">
-              <div class="col-7">
-                <input type="date" id="eventoFecha" class="form-control form-control-sm">
-              </div>
-              <div class="col-5">
-                <input type="time" id="eventoHora" class="form-control form-control-sm">
-              </div>
-            </div>
-
-            <select id="eventoRelevancia" class="form-select form-select-sm mb-2">
-              <option value="Alta (Urgente)">🔴 Relevancia: Alta (Urgente)</option>
-              <option value="Media (Especial)" selected>🟡 Relevancia: Media (Especial)</option>
-              <option value="Baja (General)">🟢 Relevancia: Baja (General)</option>
-            </select>
-
-            <button id="btnGuardarEvento" class="btn btn-kraft btn-sm w-100">Guardar Evento en Agenda</button>
-          </div>
-
-          <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
-          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- MODALES DE APLICACIÓN -->
-  <div class="modal fade" id="modalAppVisitas" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <div class="modal-header border-secondary pb-2">
-          <h5 class="text-gold fw-bold">⚙️ Horario de Visitas</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-0 pt-3">
-          <div class="app-container-modal p-3">
-            <div class="sim-box" onclick="abrirSelectorSimulacion()">
-              <div>
-                <h2 id="lblDiaSim" class="text-white mb-1" style="font-size: 20px;">LUNES</h2>
-                <p id="lblHoraSim" class="mb-0 text-white-50 small">12:00 hrs</p>
-              </div>
-              <span style="font-size: 24px;">⚙️ Simular</span>
-            </div>
-            <div class="card mb-3 p-3" style="background-color: #1e3a8a; border-radius: 14px;">
-              <div class="small fw-bold text-warning mb-1">🟢 VISITA EN CURSO O PROGRAMADA AHORA</div>
-              <div class="fs-5 fw-bold" id="lblVisitaActual">Sin visita en este horario</div>
-              <div class="small text-white-50" id="lblInfoVisitaActual" style="display:none;"></div>
-            </div>
-            <div class="d-grid gap-2 mb-3">
-              <button class="btn btn-kraft btn-sm py-2" onclick="abrirHorarioHoyVisitas()">📅 Ver Visitas de Hoy</button>
-              <button class="btn btn-outline-light btn-sm py-2" onclick="abrirHorarioSemanalVisitas()">📊 Vista Semanal Completa</button>
-            </div>
-            <div id="subPantallaDia" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 id="tituloHorarioDiaVisita" class="text-gold mb-0">Horario del Día</h6>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
-              </div>
-              <div id="listaVisitasDiaModal" style="max-height: 220px; overflow-y: auto;"></div>
-            </div>
-            <div id="subPantallaSemana" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="text-gold mb-0">Vista Semanal</h6>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
-              </div>
-              <div class="tabs mb-2 rounded">
-                <div class="tab active" onclick="cambiarTabVisitasSemana(1)">Lun</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(2)">Mar</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(3)">Mié</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(4)">Jue</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(5)">Vie</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(6)">Sáb</div>
-              </div>
-              <div id="listaVisitasSemanaModal" style="max-height: 200px; overflow-y: auto;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalAppEventos" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <div class="modal-header border-secondary pb-2">
-          <h5 class="text-info fw-bold">⚙️ Calendario de Eventos</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-0 pt-3">
-          <div class="app-container-modal p-3">
-            <div class="card mb-3 p-3" style="background-color: #0f172a; border: 1.5px solid #38bdf8; border-radius: 14px;">
-              <div class="small fw-bold text-info mb-1">📖 PRÓXIMO EVENTO DESTACADO</div>
-              <div class="fs-5 fw-bold" id="lblEventoDestacadoApp">Sin eventos próximos</div>
-              <div class="small text-white-50 mt-1" id="lblInfoEventoDestacado">Revisa el listado completo abajo.</div>
-            </div>
-            <div id="subPantallaEventosLista" style="display:block; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <h6 class="text-info mb-2">Agenda de Eventos y Encuentros:</h6>
-              <div id="listaEventosModalApp" style="max-height: 250px; overflow-y: auto;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal fade" id="modalAppCumpleanos" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <div class="modal-header border-secondary pb-2">
-          <h5 class="text-success fw-bold">🎈 Calendario Anual de Cumpleaños</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-0 pt-3">
-          <div class="app-container-modal p-3" style="max-height: 70vh; overflow-y: auto;">
-            <p class="text-white-50 small text-center mb-3">Organización festiva de todos los cumpleaños registrados divididos mes a mes.</p>
-            <div id="gridCalendarioCumpleanosModal" class="row g-3"></div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- MODAL DE DETALLE -->
@@ -526,7 +213,7 @@
             <option value="Congregantes / Adultos">Congregantes / Adultos</option>
             <option value="Jóvenes">Jóvenes</option>
             <option value="Niños">Niños</option>
-            <option value="adolescente">adolescente</option>
+            <option value="adolescente">Adolescentes</option>
             <option value="Visita">Visita</option>
           </select>
         </div>
@@ -546,33 +233,6 @@
           <button class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancelar</button>
           <button class="btn btn-kraft btn-sm w-50" onclick="guardarEdicionCongregante()">Guardar Cambios</button>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE SIMULACIÓN -->
-  <div class="modal fade" id="modalSimulacionTiempo" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <h6 class="text-gold fw-bold mb-3">⚙️ Simular Tiempo</h6>
-        <div class="mb-2">
-          <select id="selectSimDia" class="form-select form-select-sm">
-            <option value="1">Lunes</option>
-            <option value="2">Martes</option>
-            <option value="3">Miércoles</option>
-            <option value="4">Jueves</option>
-            <option value="5">Viernes</option>
-            <option value="6">Sábado</option>
-            <option value="7">Domingo</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <input type="number" id="inputSimHora" class="form-control form-control-sm" min="0" max="23" placeholder="Hora">
-        </div>
-        <div class="mb-3">
-          <input type="number" id="inputSimMinuto" class="form-control form-control-sm" min="0" max="59" placeholder="Minuto">
-        </div>
-        <button class="btn btn-kraft btn-sm w-100" onclick="aplicarSimulacionVisitas()">Aplicar</button>
       </div>
     </div>
   </div>
