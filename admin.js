@@ -1,3 +1,4 @@
+// admin.js corregido
 const SUPABASE_URL = "https://yrabdazhmmrfoqichxmt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
 
@@ -407,7 +408,7 @@ async function cargarVisitasYEventos() {
     document.getElementById("conteoVisitasHoy").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoVisitasMes").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
 
-    // Renderizar Visitas con botones funcionales
+    // Renderizar Visitas con comillas corregidas en los IDs
     let htmlV = "";
     visitasGlobales.forEach(v => {
       htmlV += `
@@ -417,8 +418,8 @@ async function cargarVisitasYEventos() {
             <small class="text-white-50">${v.descripcion || ''}</small>
           </div>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-warning fw-bold px-2 py-1" onclick="abrirModalEditarAgenda(${v.id})" style="font-size: 12px;">✏️ Editar</button>
-            <button type="button" class="btn btn-sm btn-danger fw-bold px-2 py-1" onclick="eliminarItemAgenda(${v.id})" style="font-size: 12px;">🗑️ Borrar</button>
+            <button type="button" class="btn btn-sm btn-warning fw-bold px-2 py-1" onclick="abrirModalEditarAgenda('${v.id}')" style="font-size: 12px;">✏️ Editar</button>
+            <button type="button" class="btn btn-sm btn-danger fw-bold px-2 py-1" onclick="eliminarItemAgenda('${v.id}')" style="font-size: 12px;">🗑️ Borrar</button>
           </div>
         </div>`;
     });
@@ -427,7 +428,7 @@ async function cargarVisitasYEventos() {
     document.getElementById("conteoEventosHoy").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoEventosMes").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
 
-    // Renderizar Eventos con botones funcionales
+    // Renderizar Eventos con comillas corregidas en los IDs
     let htmlE = "";
     eventosGlobales.forEach(e => {
       const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
@@ -438,8 +439,8 @@ async function cargarVisitasYEventos() {
             <small class="text-white-50">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small>
           </div>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-warning fw-bold px-2 py-1" onclick="abrirModalEditarAgenda(${e.id})" style="font-size: 12px;">✏️ Editar</button>
-            <button type="button" class="btn btn-sm btn-danger fw-bold px-2 py-1" onclick="eliminarItemAgenda(${e.id})" style="font-size: 12px;">🗑️ Borrar</button>
+            <button type="button" class="btn btn-sm btn-warning fw-bold px-2 py-1" onclick="abrirModalEditarAgenda('${e.id}')" style="font-size: 12px;">✏️ Editar</button>
+            <button type="button" class="btn btn-sm btn-danger fw-bold px-2 py-1" onclick="eliminarItemAgenda('${e.id}')" style="font-size: 12px;">🗑️ Borrar</button>
           </div>
         </div>`;
     });
@@ -450,7 +451,8 @@ async function cargarVisitasYEventos() {
 }
 
 function abrirModalEditarAgenda(id) {
-  const item = agendaCompletaGlobal.find(i => Number(i.id) === Number(id));
+  // Corrección: Convertimos ambos a String para asegurar compatibilidad si el ID es UUID o entero
+  const item = agendaCompletaGlobal.find(i => String(i.id) === String(id));
   if (!item) {
     alert("No se encontró el registro en la memoria.");
     return;
