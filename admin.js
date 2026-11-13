@@ -2,9 +2,16 @@ const SUPABASE_URL = "https://yrabdazhmmrfoqichxmt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
 
 let registrosGlobales = [];
+let visitasGlobales = [];
+let eventosGlobales = [];
 let miGrafica = null;
+let indiceCumpleActual = 0;
+let listaCumpleanosOrdenados = [];
 let registroSeleccionadoActual = null;
 let filtroSeccionActual = "todos";
+
+let fechaSimuladaVisitas = new Date();
+const nombresDias = { 1: 'LUNES', 2: 'MARTES', 3: 'MIÉRCOLES', 4: 'JUEVES', 5: 'VIERNES', 6: 'SÁBADO', 7: 'DOMINGO' };
 
 document.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem("adminLogueado") !== "true") {
@@ -20,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   cargarRegistrosAdmin();
+  cargarVisitasYEventos();
 
   // Buscador
   const inputBuscador = document.getElementById("inputBuscador");
@@ -29,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Filtros rápidos funcionales
+  // Filtros Rápidos
   document.querySelectorAll(".filtro-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       document.querySelectorAll(".filtro-btn").forEach(b => {
@@ -44,7 +52,115 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Botón Exportar Excel
+  document.getElementById("btnProximoCumple").addEventListener("click", () => {
+    if (listaCumpleanosOrdenados.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual + 1) % listaCumpleanosOrdenados.length;
+    mostrarCumpleDestacado(indiceCumpleActual);
+  });
+
+  document.getElementById("btnAnteriorCumple").addEventListener("click", () => {
+    if (listaCumpleanosOrdenados.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual - 1 + listaCumpleanosOrdenados.length) % listaCumpleanosOrdenados.length;
+    mostrarCumpleDestacado(indiceCumpleActual);
+  });
+
+  // Guardar Visita Recurrente
+  const btnGuardarVisita = document.getElementById("btnGuardarVisita");
+  if (btnGuardarVisita) {
+    btnGuardarVisita.addEventListener("click", async () => {
+      const nombre = document.getElementById("visitaNombre").value.trim();
+      const diaSemana = document.getElementById("visitaDiaSemana").value;
+      const hora = document.getElementById("visitaHora").value;
+
+      if (!nombre || !diaSemana || !hora) return alert("Completa los campos de visita.");
+
+      const tituloVisita = `Visita a ${nombre} (${diaSemana}s a las ${hora})`;
+      const fechaBase = new Date().toISOString().split('T')[0] + `T${hora}:00Z`;
+
+      try {
+        const payload = {
+          titulo: tituloVisita,
+          fecha_hora: fechaBase,
+          tipo: 'Visita',
+          descripcion: `Recurrente todos los ${diaSemana} a las ${hora}`
+        };
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Error al guardar");
+
+        alert("¡Visita guardada correctamente!");
+        document.getElementById("visitaNombre").value = "";
+        document.getElementById("visitaHora").value = "";
+        cargarVisitasYEventos();
+      } catch (err) {
+        console.error(err);
+        alert("Error al conectar con la base de datos.");
+      }
+    });
+  }
+
+  // Guardar Evento
+  const btnGuardarEvento = document.getElementById("btnGuardarEvento");
+  if (btnGuardarEvento) {
+    btnGuardarEvento.addEventListener("click", async () => {
+      const titulo = document.getElementById("eventoTitulo").value.trim();
+      const fecha = document.getElementById("eventoFecha").value;
+      const hora = document.getElementById("eventoHora").value;
+      const relevance = document.getElementById("eventoRelevancia").value;
+
+      if (!titulo || !fecha || !hora) return alert("Completa los campos del evento.");
+
+      const fechaHoraCompleta = `${fecha}T${hora}:00Z`;
+
+      const existeDuplicado = eventosGlobales.some(e => e.titulo.toLowerCase() === titulo.toLowerCase() && e.fecha_hora === fechaHoraCompleta);
+      if (existeDuplicado) {
+        return alert("⚠️ Este evento ya se encuentra registrado con la misma fecha y hora.");
+      }
+
+      try {
+        const payload = {
+          titulo: titulo,
+          fecha_hora: fechaHoraCompleta,
+          tipo: 'EventoPastor',
+          descripcion: `Relevancia: ${relevance}`
+        };
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Error al guardar");
+
+        alert("¡Evento guardado correctamente!");
+        document.getElementById("eventoTitulo").value = "";
+        document.getElementById("eventoFecha").value = "";
+        document.getElementById("eventoHora").value = "";
+        cargarVisitasYEventos();
+      } catch (err) {
+        console.error(err);
+        alert("Error al conectar con la base de datos.");
+      }
+    });
+  }
+
+  // Excel y PDF
   document.getElementById("btnExportarExcel").addEventListener("click", () => {
     if (registrosGlobales.length === 0) return alert("No hay datos para exportar");
     const ws = XLSX.utils.json_to_sheet(registrosGlobales);
@@ -53,7 +169,6 @@ document.addEventListener("DOMContentLoaded", () => {
     XLSX.writeFile(wb, "Directorio_Congregantes_Manantial.xlsx");
   });
 
-  // Botón Exportar PDF funcional
   document.getElementById("btnExportarPDF").addEventListener("click", () => {
     const elemento = document.getElementById("listaTarjetas");
     if (!elemento || registrosGlobales.length === 0) return alert("No hay datos para generar el PDF.");
@@ -67,18 +182,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }).save();
   });
 
-  // Botón Editar desde el Modal de Detalle
-  const btnEditarModal = document.getElementById("btnEditarRegistroModal");
-  if (btnEditarModal) {
-    btnEditarModal.addEventListener("click", () => {
-      if (!registroSeleccionadoActual) return;
-      const modalDetalleEl = document.getElementById("modalDetalle");
-      const modalDetalleInstance = bootstrap.Modal.getInstance(modalDetalleEl);
-      if (modalDetalleInstance) modalDetalleInstance.hide();
-      
-      abrirModalEdicion(registroSeleccionadoActual);
-    });
-  }
+  document.getElementById("btnEditarRegistroModal").addEventListener("click", () => {
+    if (!registroSeleccionadoActual) return;
+    const modalDetalleEl = document.getElementById("modalDetalle");
+    const modalDetalleInstance = bootstrap.Modal.getInstance(modalDetalleEl);
+    if (modalDetalleInstance) modalDetalleInstance.hide();
+    
+    abrirModalEdicion(registroSeleccionadoActual);
+  });
 });
 
 async function cargarRegistrosAdmin() {
@@ -96,9 +207,10 @@ async function cargarRegistrosAdmin() {
     actualizarKPIs(registrosGlobales);
     renderizarTarjetas(registrosGlobales);
     generarGrafica(registrosGlobales);
+    procesarCumpleanosCongregacion(registrosGlobales);
 
   } catch (err) {
-    console.error("Error al cargar registros:", err);
+    console.error(err);
   }
 }
 
@@ -140,7 +252,7 @@ function renderizarTarjetas(data) {
   if (!contenedor) return;
 
   if (data.length === 0) {
-    contenedor.innerHTML = `<p class="text-white-50 text-center py-3">No se encontraron registros con este filtro.</p>`;
+    contenedor.innerHTML = `<p class="text-white-50 text-center py-3">No se encontraron registros.</p>`;
     return;
   }
 
@@ -151,21 +263,25 @@ function renderizarTarjetas(data) {
     const edad = reg.edad || "N/D";
     const seccion = reg.seccion || "General";
 
-    let badgeColor = "bg-success text-dark";
-    if (seccion === "Jóvenes") badgeColor = "bg-info text-dark";
-    else if (seccion === "Niños") badgeColor = "bg-warning text-dark";
-    else if (seccion === "adolescente") badgeColor = "bg-success text-white";
-    else if (seccion === "Visita") badgeColor = "bg-danger text-white";
+    let badgeColor = "bg-success";
+    let estatusTexto = "Activo";
+    if (seccion === "Jóvenes" || seccion === "adolescente") {
+      badgeColor = "bg-warning text-dark";
+      estatusTexto = "En Seguimiento";
+    } else if (seccion === "Visita") {
+      badgeColor = "bg-danger";
+      estatusTexto = "Visita Pendiente";
+    }
 
     html += `
       <div class="col-md-4 col-sm-6">
         <div class="card card-preview p-3 text-white" onclick='mostrarDetalle(${JSON.stringify(reg)})' data-bs-toggle="modal" data-bs-target="#modalDetalle">
           <div class="d-flex align-items-center gap-3">
-            <img src="${foto}" class="rounded-circle border border-warning" width="60" height="60" style="object-fit: cover;" onerror="this.src='https://via.placeholder.com/60?text=Foto'">
+            <img src="${foto}" class="rounded-circle border border-warning" width="60" height="60" style="object-fit: cover;">
             <div>
               <h6 class="fw-bold mb-1 text-white">${nombre}</h6>
               <p class="text-white-50 small mb-1">Edad: ${edad} • <span class="text-gold">${seccion}</span></p>
-              <span class="badge ${badgeColor}">${seccion}</span>
+              <span class="badge ${badgeColor}">${estatusTexto}</span>
             </div>
           </div>
         </div>
@@ -278,4 +394,110 @@ function generarGrafica(data) {
       }
     }
   });
+}
+
+async function cargarVisitasYEventos() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor?select=*`, {
+      headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) return;
+    const todos = await res.json();
+
+    visitasGlobales = todos.filter(i => i.tipo === 'Visita');
+    eventosGlobales = todos.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
+
+    const hoyStr = new Date().toISOString().split("T")[0];
+    const mesStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
+
+    document.getElementById("conteoVisitasHoy").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
+    document.getElementById("conteoVisitasMes").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
+
+    let htmlV = "";
+    visitasGlobales.forEach(v => {
+      htmlV += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📍 <b>${v.titulo}</b><br><small class="text-warning">${v.descripcion || ''}</small></div>`;
+    });
+    document.getElementById("listaVisitasAdmin").innerHTML = htmlV || '<p class="text-white-50 small">Sin visitas.</p>';
+
+    document.getElementById("conteoEventosHoy").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
+    document.getElementById("conteoEventosMes").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
+
+    let htmlE = "";
+    eventosGlobales.forEach(e => {
+      const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
+      htmlE += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📖 <b>${e.titulo}</b><br><small class="text-info">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small></div>`;
+    });
+    document.getElementById("listaEventosAdmin").innerHTML = htmlE || '<p class="text-white-50 small">Sin eventos.</p>';
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function abrirHorarioVisitasApp() { new bootstrap.Modal(document.getElementById('modalAppVisitas')).show(); }
+function abrirHorarioEventosApp() { new bootstrap.Modal(document.getElementById('modalAppEventos')).show(); }
+function abrirCalendarioCumpleanosApp() {
+  const mesesInfo = [
+    { nombre: "ENERO", num: 1, color: "#3b82f6" }, { nombre: "FEBRERO", num: 2, color: "#06b6d4" },
+    { nombre: "MARZO", num: 3, color: "#10b981" }, { nombre: "ABRIL", num: 4, color: "#f59e0b" },
+    { nombre: "MAYO", num: 5, color: "#ec4899" }, { nombre: "JUNIO", num: 6, color: "#8b5cf6" },
+    { nombre: "JULIO", num: 7, color: "#ef4444" }, { nombre: "AGOSTO", num: 8, color: "#14b8a6" },
+    { nombre: "SEPTIEMBRE", num: 9, color: "#f97316" }, { nombre: "OCTUBRE", num: 10, color: "#6366f1" },
+    { nombre: "NOVIEMBRE", num: 11, color: "#d946ef" }, { nombre: "DICIEMBRE", num: 12, color: "#eab308" }
+  ];
+
+  const gridContainer = document.getElementById("gridCalendarioCumpleanosModal");
+  let htmlMeses = "";
+  mesesInfo.forEach((mes) => {
+    const cumpleMes = registrosGlobales.filter(r => r.fecha_nacimiento && parseInt(r.fecha_nacimiento.split("-")[1], 10) === mes.num);
+    htmlMeses += `
+      <div class="col-md-4 col-sm-6">
+        <div class="card bg-black border border-secondary rounded-3 h-100 p-2">
+          <div class="py-1 text-white fw-bold text-center rounded" style="background-color: ${mes.color}; font-size: 12px;">🎈 ${mes.nombre}</div>
+          <div class="p-2" style="max-height: 140px; overflow-y: auto;">
+    `;
+    if (cumpleMes.length === 0) {
+      htmlMeses += `<p class="text-white-50 small text-center mb-0">Sin cumpleaños</p>`;
+    } else {
+      cumpleMes.forEach(c => {
+        const dia = c.fecha_nacimiento.split("-")[2];
+        htmlMeses += `<div class="d-flex justify-content-between small text-white border-bottom border-secondary py-1"><span>🎂 ${c.nombre_completo}</span><span class="badge bg-warning text-dark">Día ${dia}</span></div>`;
+      });
+    }
+    htmlMeses += `</div></div></div>`;
+  });
+  gridContainer.innerHTML = htmlMeses;
+  new bootstrap.Modal(document.getElementById('modalAppCumpleanos')).show();
+}
+
+function procesarCumpleanosCongregacion(data) {
+  const hoy = new Date();
+  const anioActual = hoy.getFullYear();
+  const validos = data.filter(r => r.fecha_nacimiento && r.fecha_nacimiento.includes("-"));
+
+  listaCumpleanosOrdenados = validos.map(person => {
+    const parts = person.fecha_nacimiento.split("-");
+    let proximo = new Date(anioActual, parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    if (proximo < new Date(anioActual, hoy.getMonth(), hoy.getDate())) proximo = new Date(anioActual + 1, parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    const diasFaltantes = Math.ceil((proximo - new Date(anioActual, hoy.getMonth(), hoy.getDate())) / (1000 * 60 * 60 * 24));
+    return { ...person, diasFaltantes };
+  }).sort((a, b) => a.diasFaltantes - b.diasFaltantes);
+
+  if (listaCumpleanosOrdenados.length > 0) mostrarCumpleDestacado(0);
+}
+
+function mostrarCumpleDestacado(index) {
+  const persona = listaCumpleanosOrdenados[index];
+  if (!persona) return;
+  const foto = persona.foto_url && persona.foto_url.trim() !== "" ? persona.foto_url : "https://via.placeholder.com/100?text=Foto";
+  const badge = document.getElementById("badgeDiasRestantes");
+
+  badge.textContent = persona.diasFaltantes === 0 ? "🎂 ¡ES HOY!" : `En ${persona.diasFaltantes} días`;
+  document.getElementById("cumpleDestacadoContainer").innerHTML = `
+    <img src="${foto}" class="rounded-circle border border-success shadow" width="75" height="75" style="object-fit: cover;">
+    <div>
+      <h5 class="text-white mb-1 fw-bold">${persona.nombre_completo}</h5>
+      <p class="text-success small mb-0">🎂 Cumpleaños: <b>${persona.fecha_nacimiento}</b></p>
+      <small class="text-white-50">Sección: ${persona.seccion}</small>
+    </div>
+  `;
 }
