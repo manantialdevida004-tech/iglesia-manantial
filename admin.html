@@ -1,542 +1,470 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - Manantial de Vida</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Chart.js para gráficas -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --bg-color: #080c14;
-      --primary-color: #cbb281;
-      --card-color: #111827;
-      --container-bg: #0f172a;
-      --current-class-bg: #1e3a8a;
-      --text-white: #FFFFFF;
-      --text-grey: #9ca3af;
-      --accent-red: #f59e0b;
+const SUPABASE_URL = "https://yrabdazhmmrfoqichxmt.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_uwqp_xaG8kD_5cVdQMkIkg_mU0gDn-V";
+
+let registrosGlobales = [];
+let visitasGlobales = [];
+let eventosGlobales = [];
+let miGrafica = null;
+let indiceCumpleActual = 0;
+let listaCumpleanosOrdenados = [];
+let registroSeleccionadoActual = null;
+
+let fechaSimuladaVisitas = new Date();
+const nombresDias = { 1: 'LUNES', 2: 'MARTES', 3: 'MIÉRCOLES', 4: 'JUEVES', 5: 'VIERNES', 6: 'SÁBADO', 7: 'DOMINGO' };
+
+document.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem("adminLogueado") !== "true") {
+    window.location.href = "admin-login.html";
+  }
+
+  const btnCerrar = document.getElementById("btnCerrarSesion");
+  if (btnCerrar) {
+    btnCerrar.addEventListener("click", () => {
+      localStorage.removeItem("adminLogueado");
+      window.location.href = "index.html";
+    });
+  }
+
+  cargarRegistrosAdmin();
+  cargarVisitasYEventos();
+
+  const inputBuscador = document.getElementById("inputBuscador");
+  if (inputBuscador) {
+    inputBuscador.addEventListener("input", (e) => {
+      const texto = e.target.value.toLowerCase();
+      const filtrados = registrosGlobales.filter(r => 
+        (r.nombre_completo && r.nombre_completo.toLowerCase().includes(texto)) ||
+        (r.telefono && r.telefono.toLowerCase().includes(texto)) ||
+        (r.direccion && r.direccion.toLowerCase().includes(texto))
+      );
+      renderizarTarjetas(filtrados);
+    });
+  }
+
+  document.getElementById("btnProximoCumple").addEventListener("click", () => {
+    if (listaCumpleanosOrdenados.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual + 1) % listaCumpleanosOrdenados.length;
+    mostrarCumpleDestacado(indiceCumpleActual);
+  });
+
+  document.getElementById("btnAnteriorCumple").addEventListener("click", () => {
+    if (listaCumpleanosOrdenados.length === 0) return;
+    indiceCumpleActual = (indiceCumpleActual - 1 + listaCumpleanosOrdenados.length) % listaCumpleanosOrdenados.length;
+    mostrarCumpleDestacado(indiceCumpleActual);
+  });
+
+  // Guardar Visita Recurrente
+  const btnGuardarVisita = document.getElementById("btnGuardarVisita");
+  if (btnGuardarVisita) {
+    btnGuardarVisita.addEventListener("click", async () => {
+      const nombre = document.getElementById("visitaNombre").value.trim();
+      const diaSemana = document.getElementById("visitaDiaSemana").value;
+      const hora = document.getElementById("visitaHora").value;
+
+      if (!nombre || !diaSemana || !hora) return alert("Completa los campos de visita.");
+
+      const tituloVisita = `Visita a ${nombre} (${diaSemana}s a las ${hora})`;
+      const fechaBase = new Date().toISOString().split('T')[0] + `T${hora}:00Z`;
+
+      try {
+        const payload = {
+          titulo: tituloVisita,
+          fecha_hora: fechaBase,
+          tipo: 'Visita',
+          descripcion: `Recurrente todos los ${diaSemana} a las ${hora}`
+        };
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Error al guardar");
+
+        alert("¡Visita guardada correctamente!");
+        document.getElementById("visitaNombre").value = "";
+        document.getElementById("visitaHora").value = "";
+        cargarVisitasYEventos();
+      } catch (err) {
+        console.error(err);
+        alert("Error al conectar con la base de datos.");
+      }
+    });
+  }
+
+  // Guardar Evento (Antide duplicados)
+  const btnGuardarEvento = document.getElementById("btnGuardarEvento");
+  if (btnGuardarEvento) {
+    btnGuardarEvento.addEventListener("click", async () => {
+      const titulo = document.getElementById("eventoTitulo").value.trim();
+      const fecha = document.getElementById("eventoFecha").value;
+      const hora = document.getElementById("eventoHora").value;
+      const relevancia = document.getElementById("eventoRelevancia").value;
+
+      if (!titulo || !fecha || !hora) return alert("Completa los campos del evento.");
+
+      const fechaHoraCompleta = `${fecha}T${hora}:00Z`;
+
+      // Validar si ya existe un evento idéntico para evitar duplicados
+      const existeDuplicado = eventosGlobales.some(e => e.titulo.toLowerCase() === titulo.toLowerCase() && e.fecha_hora === fechaHoraCompleta);
+      if (existeDuplicado) {
+        return alert("⚠️ Este evento ya se encuentra registrado con la misma fecha y hora.");
+      }
+
+      try {
+        const payload = {
+          titulo: titulo,
+          fecha_hora: fechaHoraCompleta,
+          tipo: 'EventoPastor',
+          descripcion: `Relevancia: ${relevancia}`
+        };
+
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "Prefer": "return=representation"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Error al guardar");
+
+        alert("¡Evento guardado correctamente!");
+        document.getElementById("eventoTitulo").value = "";
+        document.getElementById("eventoFecha").value = "";
+        document.getElementById("eventoHora").value = "";
+        cargarVisitasYEventos();
+      } catch (err) {
+        console.error(err);
+        alert("Error al conectar con la base de datos.");
+      }
+    });
+  }
+
+  // Descargas habilitadas para el Directorio
+  document.getElementById("btnExportarExcel").addEventListener("click", () => {
+    if (registrosGlobales.length === 0) return alert("No hay datos para exportar");
+    const ws = XLSX.utils.json_to_sheet(registrosGlobales);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Congregantes");
+    XLSX.writeFile(wb, "Directorio_Congregantes_Manantial.xlsx");
+  });
+
+  document.getElementById("btnExportarPDF").addEventListener("click", () => {
+    html2pdf().from(document.getElementById("listaTarjetas")).save('Directorio_Congregantes_Manantial.pdf');
+  });
+
+  document.getElementById("btnEditarRegistroModal").addEventListener("click", () => {
+    if (!registroSeleccionadoActual) return;
+    bootstrap.Modal.getInstance(document.getElementById("modalDetalle")).hide();
+    abrirModalEdicion(registroSeleccionadoActual);
+  });
+});
+
+async function cargarRegistrosAdmin() {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/registros_iglesia?select=*`, {
+      headers: {
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`
+      }
+    });
+
+    if (!response.ok) throw new Error("Error al obtener registros");
+    registrosGlobales = await response.json();
+    
+    actualizarKPIs(registrosGlobales);
+    renderizarTarjetas(registrosGlobales);
+    generarGrafica(registrosGlobales);
+    procesarCumpleanosCongregacion(registrosGlobales);
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function actualizarKPIs(data) {
+  document.getElementById("kpiTotal").textContent = data.length;
+  document.getElementById("kpiCongregantes").textContent = data.filter(r => r.seccion === "Congregantes / Adultos").length;
+  
+  const jovenes = data.filter(r => r.seccion === "Jóvenes").length;
+  const ninos = data.filter(r => r.seccion === "Niños").length;
+  const adolescentes = data.filter(r => r.seccion === "adolescente").length;
+
+  document.getElementById("kpiJovenes").textContent = jovenes;
+  document.getElementById("kpiNinos").textContent = ninos;
+  document.getElementById("kpiAdolescentes").textContent = adolescentes;
+
+  const mesActual = new Date().getMonth() + 1;
+  const cumpleMes = data.filter(r => {
+    if (!r.fecha_nacimiento) return false;
+    return parseInt(r.fecha_nacimiento.split("-")[1], 10) === mesActual;
+  }).length;
+  document.getElementById("kpiCumple").textContent = cumpleMes;
+}
+
+function renderizarTarjetas(data) {
+  const contenedor = document.getElementById("listaTarjetas");
+  if (!contenedor) return;
+
+  if (data.length === 0) {
+    contenedor.innerHTML = `<p class="text-white-50 text-center py-3">No hay registros.</p>`;
+    return;
+  }
+
+  let html = "";
+  data.forEach((reg) => {
+    const foto = reg.foto_url && reg.foto_url.trim() !== "" ? reg.foto_url : "https://via.placeholder.com/150?text=Sin+Foto";
+    const nombre = reg.nombre_completo || "Sin Nombre";
+    const edad = reg.edad || "N/D";
+    const seccion = reg.seccion || "General";
+
+    // Semáforo de estatus según la sección o condición (Verde, Amarillo, Rojo)
+    let badgeColor = "bg-success";
+    let estatusTexto = "Activo • Verde";
+    if (seccion === "Jóvenes" || seccion === "adolescente") {
+      badgeColor = "bg-warning text-dark";
+      estatusTexto = "En Seguimiento • Amarillo";
+    } else if (seccion === "Visita") {
+      badgeColor = "bg-danger";
+      estatusTexto = "Visita Pendiente • Rojo";
     }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-white);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow-x: hidden;
-    }
-
-    /* Encabezado fijo superior */
-    .navbar-custom {
-      background-color: #0f172a !important;
-      border-bottom: 2px solid #1e3a8a;
-      position: sticky;
-      top: 0;
-      z-index: 1030;
-    }
-
-    h1, h2, h3, h4, h5, h6, label, p, span, small {
-      color: #f8fafc !important;
-    }
-    .text-gold {
-      color: #cbb281 !important;
-    }
-
-    .fade-in-up {
-      animation: fadeInUp 0.6s ease-in-up;
-    }
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Tarjetas KPI */
-    .card-kpi {
-      background-color: #111827;
-      border: 1px solid #374151;
-      border-top: 4px solid #cbb281;
-      border-radius: 12px;
-      transition: all 0.3s ease;
-    }
-    .card-kpi:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.2);
-    }
-
-    /* Tarjetas Mercado Libre (Directorio) */
-    .card-preview {
-      background-color: #111827;
-      border: 1px solid #374151;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .card-preview:hover {
-      border-color: #cbb281;
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px rgba(203, 178, 129, 0.25);
-    }
-
-    /* Controles y campos */
-    .form-control, .form-select {
-      background-color: #0f172a;
-      border: 1px solid #4b5563;
-      color: #ffffff;
-      border-radius: 8px;
-    }
-    .form-control:focus, .form-select:focus {
-      background-color: #0f172a;
-      border-color: #cbb281;
-      color: #ffffff;
-      box-shadow: 0 0 0 0.25rem rgba(203, 178, 129, 0.25);
-    }
-    .form-control::placeholder {
-      color: #9ca3af;
-    }
-
-    /* Botones temáticos */
-    .btn-kraft {
-      background-color: #cbb281;
-      color: #080c14;
-      font-weight: bold;
-      border-radius: 8px;
-      border: none;
-      transition: all 0.3s ease;
-    }
-    .btn-kraft:hover {
-      background-color: #b39762;
-      color: #ffffff;
-      transform: translateY(-2px);
-    }
-
-    .card-cumple-destacado {
-      background-color: #111827;
-      border: 1px solid #374151;
-      border-radius: 12px;
-      border-left: 5px solid #10b981;
-    }
-
-    /* Estilos para modales de app */
-    .app-container-modal {
-      width: 100%;
-      background-color: var(--card-color);
-      display: flex;
-      flex-direction: column;
-      border-radius: 12px;
-      overflow: hidden;
-      min-height: 450px;
-    }
-
-    .sim-box {
-      background-color: var(--container-bg);
-      border: 1.5px solid var(--primary-color);
-      border-radius: 16px;
-      padding: 16px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      margin-bottom: 12px;
-    }
-
-    .class-item {
-      background-color: var(--container-bg);
-      border-radius: 16px;
-      padding: 14px 16px;
-      border: 1px solid rgba(255,255,255,0.1);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 10px;
-    }
-
-    .class-item input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      accent-color: var(--primary-color);
-      cursor: pointer;
-    }
-
-    .completed h6 {
-      color: var(--text-grey) !important;
-      text-decoration: line-through;
-    }
-  </style>
-</head>
-<body>
-
-  <!-- 1. ENCABEZADO FIJO SUPERIOR -->
-  <nav class="navbar navbar-expand-lg navbar-dark navbar-custom py-3 shadow">
-    <div class="container">
-      <a class="navbar-brand d-flex align-items-center fw-bold" href="index.html">
-        <img src="logo.png" alt="Logo" width="40" height="40" class="rounded-circle me-2 border border-warning" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
-        <div>
-          <span class="text-gold fs-6 d-block">Manantial de Vida</span>
-          <small class="text-white-50" style="font-size: 0.75rem;">Panel Administrativo</small>
-        </div>
-      </a>
-      <div class="ms-auto d-flex gap-2">
-        <a class="btn btn-outline-light btn-sm px-3" href="index.html">🏠 Volver al Inicio</a>
-        <button id="btnCerrarSesion" class="btn btn-outline-danger btn-sm px-3">🚪 Cerrar Sesión</button>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container my-4 fade-in-up">
-
-    <!-- CONTENEDOR DE ALERTAS -->
-    <div id="adminAlertas"></div>
-
-    <!-- 2. ZONA DE DASHBOARD (KPIs) -->
-    <div class="row g-3 mb-4">
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Total Registrados</small>
-          <h2 id="kpiTotal" class="fw-bold text-white mt-2">0</h2>
-        </div>
-      </div>
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Congregantes</small>
-          <h2 id="kpiCongregantes" class="fw-bold text-gold mt-2">0</h2>
-        </div>
-      </div>
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Jóvenes / Niños</small>
-          <h2 id="kpiJovenes" class="fw-bold text-info mt-2">0</h2>
-        </div>
-      </div>
-      <div class="col-md-3 col-6">
-        <div class="card card-kpi p-3 text-center">
-          <small class="text-white-50 text-uppercase fw-bold">Cumpleaños Mes</small>
-          <h2 id="kpiCumple" class="fw-bold text-success mt-2">0</h2>
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. ZONA DE GRÁFICAS DE DISTRIBUCIÓN POR SECCIONES -->
-    <div class="row g-4 mb-4">
-      <div class="col-lg-12">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow">
-          <h5 class="fw-bold text-gold mb-3">📊 Gráfica de Distribución por Secciones</h5>
-          <div style="position: relative; height: 260px; width: 100%;">
-            <canvas id="graficaSecciones"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. ZONA DE BUSCADOR, ATAJOS Y DESCARGAS -->
-    <div class="row g-3 mb-4 align-items-center">
-      <div class="col-lg-6">
-        <input type="text" id="inputBuscador" class="form-control" placeholder="🔍 Buscar por Nombre, Teléfono o Dirección...">
-      </div>
-      <div class="col-lg-6 text-lg-end d-flex gap-2 justify-content-lg-end flex-wrap">
-        <button class="btn btn-kraft btn-sm px-3" onclick="abrirCalendarioCumpleanosApp()">🎂 Ver Calendario Anual</button>
-        <button id="btnExportarExcel" class="btn btn-success btn-sm px-3">📊 Excel</button>
-        <button id="btnExportarPDF" class="btn btn-danger btn-sm px-3">📄 PDF General</button>
-      </div>
-    </div>
-
-    <!-- 5. DIRECTORIO DE CONGREGANTES -->
-    <div class="card bg-dark border-secondary p-4 rounded-4 shadow mb-5">
-      <h4 class="fw-bold text-gold mb-3">📋 Directorio de Congregantes (Haz clic para ver detalles)</h4>
-      <div id="listaTarjetas" class="row g-3">
-        <p class="text-white-50 text-center py-3">Cargando registros...</p>
-      </div>
-    </div>
-
-    <!-- 6. ZONA DE CUMPLEAÑOS DE LA CONGREGACIÓN (ACTUALIZADA SIN BOTÓN PDF) -->
-    <div class="row g-4 mb-5">
-      <div class="col-lg-7">
-        <div class="card card-cumple-destacado p-4 shadow h-100">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="fw-bold text-success mb-0">🎉 Cumpleaños de la Congregación</h4>
-            <span id="badgeDiasRestantes" class="badge bg-success text-dark">Calculando...</span>
-          </div>
-          <div id="cumpleDestacadoContainer" class="d-flex align-items-center gap-3 mb-3">
-            <div class="spinner-border text-success spinner-border-sm" role="status"></div>
-            <span class="text-white-50">Cargando cumpleañero más próximo...</span>
-          </div>
-          <div class="d-flex gap-2 flex-wrap">
-            <button id="btnAnteriorCumple" class="btn btn-outline-light btn-sm">⬅️ Anterior</button>
-            <button id="btnProximoCumple" class="btn btn-outline-warning btn-sm">Próximo ➡️</button>
-            <a id="btnEnviarMensajeCumple" href="#" target="_blank" class="btn btn-success btn-sm ms-auto" style="display:none;">💬 Enviar Mensaje WhatsApp</a>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-5">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100 d-flex flex-column justify-content-center gap-3 text-center">
-          <h5 class="text-gold fw-bold">🎈 Calendarios de Cumpleaños</h5>
-          <p class="text-white-50 small mb-0">Visualiza la agenda festiva anual ordenada mes a mes.</p>
-          <button class="btn btn-kraft w-100 py-2" onclick="abrirCalendarioCumpleanosApp()">🎂 Abrir Calendario Anual de Cumpleaños</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 7. ZONA DE AGENDA Y VISITAS (VISITAS Y EVENTOS) -->
-    <div class="row g-4 mb-4">
-      <!-- Columna Izquierda: Visitas a Congregantes -->
-      <div class="col-lg-6">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
-          <h4 class="fw-bold text-warning mb-3">🏡 Agenda de Visitas a Congregantes</h4>
-          <p class="text-white-50 small">Control interactivo de visitas pastorales domiciliarias.</p>
-          
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Visitas hoy</small>
-                <h5 id="conteoVisitasHoy" class="text-warning mb-0">0</h5>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Visitas este mes</small>
-                <h5 id="conteoVisitasMes" class="text-success mb-0">0</h5>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn btn-kraft w-100 py-3 mb-3" onclick="abrirHorarioVisitasApp()">
-            📅 Abrir Horario de Visitas Pastorales
-          </button>
-
-          <div class="p-3 bg-black rounded border border-secondary mb-3">
-            <h6 class="text-gold mb-2">Capturar Nueva Visita (Semanal)</h6>
-            <input type="text" id="visitaNombre" class="form-control form-control-sm mb-2" placeholder="Nombre del congregante (Ej. Pepe)">
-            
-            <select id="visitaDiaSemana" class="form-select form-select-sm mb-2">
-              <option value="Lunes">Lunes</option>
-              <option value="Martes">Martes</option>
-              <option value="Miércoles">Miércoles</option>
-              <option value="Jueves">Jueves</option>
-              <option value="Viernes">Viernes</option>
-              <option value="Sábado">Sábado</option>
-              <option value="Domingo">Domingo</option>
-            </select>
-
-            <input type="time" id="visitaHora" class="form-control form-control-sm mb-2">
-            <button id="btnGuardarVisita" class="btn btn-kraft btn-sm w-100">Guardar Visita Recurrente</button>
-          </div>
-
-          <h6 class="text-warning mt-2">Próximas Visitas Programadas:</h6>
-          <div id="listaVisitasAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
-        </div>
-      </div>
-
-      <!-- Columna Derecha: Agenda de Eventos y Cuentos del Pastor -->
-      <div class="col-lg-6">
-        <div class="card bg-dark border-secondary p-4 rounded-4 shadow h-100">
-          <h4 class="fw-bold text-info mb-3">📖 Agenda de Eventos y encuentros del Pastor</h4>
-          <p class="text-white-50 small">Gestión y control de eventos y narraciones pastorales.</p>
-
-          <div class="row g-2 mb-3">
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Eventos hoy</small>
-                <h5 id="conteoEventosHoy" class="text-info mb-0">0</h5>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="p-2 bg-black rounded border border-secondary text-center">
-                <small class="text-white-50">Eventos este mes</small>
-                <h5 id="conteoEventosMes" class="text-success mb-0">0</h5>
-              </div>
-            </div>
-          </div>
-
-          <button class="btn btn-outline-info w-100 py-3 mb-3" onclick="abrirHorarioEventosApp()">
-            📅 Abrir Calendario de Eventos y Cuentos
-          </button>
-
-          <div class="p-3 bg-black rounded border border-secondary mb-3">
-            <h6 class="text-gold mb-2">Capturar Nuevo Evento / Cuento</h6>
-            <input type="text" id="eventoTitulo" class="form-control form-control-sm mb-2" placeholder="Título (Ej. Reunión especial / Cuento)">
-            
-            <div class="row g-2 mb-2">
-              <div class="col-7">
-                <input type="date" id="eventoFecha" class="form-control form-control-sm">
-              </div>
-              <div class="col-5">
-                <input type="time" id="eventoHora" class="form-control form-control-sm">
-              </div>
-            </div>
-
-            <select id="eventoRelevancia" class="form-select form-select-sm mb-2">
-              <option value="Alta (Urgente)">🔴 Relevancia: Alta (Urgente)</option>
-              <option value="Media (Especial)" selected>🟡 Relevancia: Media (Especial)</option>
-              <option value="Baja (General)">🟢 Relevancia: Baja (General)</option>
-            </select>
-
-            <button id="btnGuardarEvento" class="btn btn-kraft btn-sm w-100">Guardar Evento en Agenda</button>
-          </div>
-
-          <h6 class="text-info mt-2">Próximos Eventos del Pastor:</h6>
-          <div id="listaEventosAdmin" class="list-group list-group-dark small" style="max-height: 180px; overflow-y: auto;"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- MODAL INTERACTIVO DE VISITAS (ESTILO APP) -->
-  <div class="modal fade" id="modalAppVisitas" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <div class="modal-header border-secondary pb-2">
-          <h5 class="text-gold fw-bold">⚙️</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-0 pt-3">
-          <div class="app-container-modal p-3">
-            <div class="sim-box" onclick="abrirSelectorSimulacion()">
-              <div>
-                <h2 id="lblDiaSim" class="text-white mb-1" style="font-size: 20px;">LUNES</h2>
-                <p id="lblHoraSim" class="mb-0 text-white-50 small">12:00 hrs</p>
-              </div>
-              <span style="font-size: 24px;">⚙️ Simular</span>
-            </div>
-            <div class="card mb-3 p-3" style="background-color: #1e3a8a; border-radius: 14px;">
-              <div class="small fw-bold text-warning mb-1">🟢 VISITA EN CURSO O PROGRAMADA AHORA</div>
-              <div class="fs-5 fw-bold" id="lblVisitaActual">Sin visita en este horario</div>
-              <div class="small text-white-50" id="lblInfoVisitaActual" style="display:none;"></div>
-            </div>
-            <div class="d-grid gap-2 mb-3">
-              <button class="btn btn-kraft btn-sm py-2" onclick="abrirHorarioHoyVisitas()">📅 Ver Visitas de Hoy</button>
-              <button class="btn btn-outline-light btn-sm py-2" onclick="abrirHorarioSemanalVisitas()">📊 Vista Semanal Completa</button>
-            </div>
-            <div id="subPantallaDia" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 id="tituloHorarioDiaVisita" class="text-gold mb-0">Horario del Día</h6>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
-              </div>
-              <div id="listaVisitasDiaModal" style="max-height: 220px; overflow-y: auto;"></div>
-            </div>
-            <div id="subPantallaSemana" style="display:none; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="text-gold mb-0">Vista Semanal</h6>
-                <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="cerrarSubPantallaVisitas()">← Volver</button>
-              </div>
-              <div class="tabs mb-2 rounded">
-                <div class="tab active" onclick="cambiarTabVisitasSemana(1)">Lun</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(2)">Mar</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(3)">Mié</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(4)">Jue</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(5)">Vie</div>
-                <div class="tab" onclick="cambiarTabVisitasSemana(6)">Sáb</div>
-              </div>
-              <div id="listaVisitasSemanaModal" style="max-height: 200px; overflow-y: auto;"></div>
+    html += `
+      <div class="col-md-4 col-sm-6">
+        <div class="card card-preview p-3 text-white" onclick='mostrarDetalle(${JSON.stringify(reg)})' data-bs-toggle="modal" data-bs-target="#modalDetalle">
+          <div class="d-flex align-items-center gap-3">
+            <img src="${foto}" class="rounded-circle border border-warning" width="60" height="60" style="object-fit: cover;">
+            <div>
+              <h6 class="fw-bold mb-1 text-white">${nombre}</h6>
+              <p class="text-white-50 small mb-1">Edad: ${edad} • <span class="text-gold">${seccion}</span></p>
+              <span class="badge ${badgeColor}">${estatusTexto}</span>
             </div>
           </div>
         </div>
       </div>
+    `;
+  });
+  contenedor.innerHTML = html;
+}
+
+function mostrarDetalle(reg) {
+  registroSeleccionadoActual = reg;
+  document.getElementById("modalNombreTitulo").textContent = reg.nombre_completo || "Detalle";
+  const foto = reg.foto_url && reg.foto_url.trim() !== "" ? reg.foto_url : "https://via.placeholder.com/120?text=Sin+Foto";
+
+  document.getElementById("modalContenidoDetalle").innerHTML = `
+    <div class="text-center mb-3">
+      <img src="${foto}" class="rounded-circle border border-warning mb-2" width="100" height="100" style="object-fit: cover;">
     </div>
-  </div>
+    <p><b>📌 Sección:</b> ${reg.seccion || 'N/D'}</p>
+    <p><b>🎂 Edad:</b> ${reg.edad || 'N/D'} años</p>
+    <p><b>🕊️ Creyente:</b> ${reg.creyente || 'N/D'}</p>
+    <p><b>📍 Dirección:</b> ${reg.direccion || 'N/D'}</p>
+    <p><b>📞 Teléfono:</b> ${reg.telefono || 'N/D'}</p>
+    <p><b>📅 Fecha de Nacimiento:</b> ${reg.fecha_nacimiento || 'N/D'}</p>
+  `;
 
-  <!-- MODAL INTERACTIVO DE EVENTOS (ESTILO APP) -->
-  <div class="modal fade" id="modalAppEventos" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-md">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <div class="modal-header border-secondary pb-2">
-          <h5 class="text-info fw-bold">⚙️ Calendario Interactivo de Eventos del Pastor</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-0 pt-3">
-          <div class="app-container-modal p-3">
-            <div class="card mb-3 p-3" style="background-color: #0f172a; border: 1.5px solid #38bdf8; border-radius: 14px;">
-              <div class="small fw-bold text-info mb-1">📖 PRÓXIMO EVENTO DESTACADO</div>
-              <div class="fs-5 fw-bold" id="lblEventoDestacadoApp">Sin eventos próximos</div>
-              <div class="small text-white-50 mt-1" id="lblInfoEventoDestacado">Revisa el listado completo abajo.</div>
-            </div>
-            <div id="subPantallaEventosLista" style="display:block; background: #0f172a; padding: 12px; border-radius: 12px; margin-top: 10px;">
-              <h6 class="text-info mb-2">Agenda de Eventos y encuentros:</h6>
-              <div id="listaEventosModalApp" style="max-height: 250px; overflow-y: auto;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
+  const btnWsp = document.getElementById("btnWhatsAppModal");
+  if (reg.telefono) {
+    const telLimpio = reg.telefono.replace(/\D/g, '');
+    btnWsp.href = `https://wa.me/521${telLimpio}?text=Hola%20${encodeURIComponent(reg.nombre_completo)},%20te%20contactamos%20de%20la%20Iglesia.`;
+    btnWsp.style.display = "inline-block";
+  } else {
+    btnWsp.style.display = "none";
+  }
+}
+
+function abrirModalEdicion(reg) {
+  document.getElementById("editId").value = reg.id;
+  document.getElementById("editNombre").value = reg.nombre_completo || "";
+  document.getElementById("editSeccion").value = reg.seccion || "Congregantes / Adultos";
+  document.getElementById("editEdad").value = reg.edad || "";
+  document.getElementById("editTelefono").value = reg.telefono || "";
+  document.getElementById("editDireccion").value = reg.direccion || "";
+
+  const modalEdit = new bootstrap.Modal(document.getElementById("modalEdicion"));
+  modalEdit.show();
+}
+
+async function guardarEdicionCongregante() {
+  const id = document.getElementById("editId").value;
+  const payload = {
+    nombre_completo: document.getElementById("editNombre").value.trim(),
+    seccion: document.getElementById("editSeccion").value,
+    edad: parseInt(document.getElementById("editEdad").value) || null,
+    telefono: document.getElementById("editTelefono").value.trim(),
+    direccion: document.getElementById("editDireccion").value.trim()
+  };
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/registros_iglesia?id=eq.${id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+        "Prefer": "return=representation"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error("Error al actualizar");
+
+    alert("¡Registro actualizado con éxito!");
+    bootstrap.Modal.getInstance(document.getElementById("modalEdicion")).hide();
+    cargarRegistrosAdmin();
+  } catch (err) {
+    console.error(err);
+    alert("Error al actualizar el registro.");
+  }
+}
+
+function generarGrafica(data) {
+  const ctx = document.getElementById('graficaSecciones');
+  if (!ctx) return;
+  const conteo = {};
+  data.forEach(r => {
+    const sec = r.seccion || "General";
+    conteo[sec] = (conteo[sec] || 0) + 1;
+  });
+
+  if (miGrafica) miGrafica.destroy();
+  miGrafica = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(conteo),
+      datasets: [{
+        label: 'Registros por Sección',
+        data: Object.values(conteo),
+        backgroundColor: ['#cbb281', '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#06b6d4'],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#ffffff' } } },
+      scales: {
+        x: { ticks: { color: '#ffffff' } },
+        y: { ticks: { color: '#ffffff' }, grid: { color: '#374151' } }
+      }
+    }
+  });
+}
+
+// Funciones de apoyo de agenda y app
+async function cargarVisitasYEventos() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/agenda_pastor?select=*`, {
+      headers: { "apikey": SUPABASE_ANON_KEY, "Authorization": `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (!res.ok) return;
+    const todos = await res.json();
+
+    visitasGlobales = todos.filter(i => i.tipo === 'Visita');
+    eventosGlobales = todos.filter(i => i.tipo === 'EventoPastor' || !i.tipo);
+
+    const hoyStr = new Date().toISOString().split("T")[0];
+    const mesStr = (new Date().getMonth() + 1).toString().padStart(2, '0');
+
+    document.getElementById("conteoVisitasHoy").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
+    document.getElementById("conteoVisitasMes").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
+
+    let htmlV = "";
+    visitasGlobales.forEach(v => {
+      htmlV += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📍 <b>${v.titulo}</b><br><small class="text-warning">${v.descripcion || ''}</small></div>`;
+    });
+    document.getElementById("listaVisitasAdmin").innerHTML = htmlV || '<p class="text-white-50 small">Sin visitas.</p>';
+
+    document.getElementById("conteoEventosHoy").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
+    document.getElementById("conteoEventosMes").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
+
+    let htmlE = "";
+    eventosGlobales.forEach(e => {
+      const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
+      htmlE += `<div class="list-group-item bg-dark text-white border-secondary mb-1 rounded p-2">📖 <b>${e.titulo}</b><br><small class="text-info">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small></div>`;
+    });
+    document.getElementById("listaEventosAdmin").innerHTML = htmlE || '<p class="text-white-50 small">Sin eventos.</p>';
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function abrirHorarioVisitasApp() { new bootstrap.Modal(document.getElementById('modalAppVisitas')).show(); }
+function abrirHorarioEventosApp() { new bootstrap.Modal(document.getElementById('modalAppEventos')).show(); }
+function abrirCalendarioCumpleanosApp() {
+  const mesesInfo = [
+    { nombre: "ENERO", num: 1, color: "#3b82f6" }, { nombre: "FEBRERO", num: 2, color: "#06b6d4" },
+    { nombre: "MARZO", num: 3, color: "#10b981" }, { nombre: "ABRIL", num: 4, color: "#f59e0b" },
+    { nombre: "MAYO", num: 5, color: "#ec4899" }, { nombre: "JUNIO", num: 6, color: "#8b5cf6" },
+    { nombre: "JULIO", num: 7, color: "#ef4444" }, { nombre: "AGOSTO", num: 8, color: "#14b8a6" },
+    { nombre: "SEPTIEMBRE", num: 9, color: "#f97316" }, { nombre: "OCTUBRE", num: 10, color: "#6366f1" },
+    { nombre: "NOVIEMBRE", num: 11, color: "#d946ef" }, { nombre: "DICIEMBRE", num: 12, color: "#eab308" }
+  ];
+
+  const gridContainer = document.getElementById("gridCalendarioCumpleanosModal");
+  let htmlMeses = "";
+  mesesInfo.forEach((mes) => {
+    const cumpleMes = registrosGlobales.filter(r => r.fecha_nacimiento && parseInt(r.fecha_nacimiento.split("-")[1], 10) === mes.num);
+    htmlMeses += `
+      <div class="col-md-4 col-sm-6">
+        <div class="card bg-black border border-secondary rounded-3 h-100 p-2">
+          <div class="py-1 text-white fw-bold text-center rounded" style="background-color: ${mes.color}; font-size: 12px;">🎈 ${mes.nombre}</div>
+          <div class="p-2" style="max-height: 140px; overflow-y: auto;">
+    `;
+    if (cumpleMes.length === 0) {
+      htmlMeses += `<p class="text-white-50 small text-center mb-0">Sin cumpleaños</p>`;
+    } else {
+      cumpleMes.forEach(c => {
+        const dia = c.fecha_nacimiento.split("-")[2];
+        htmlMeses += `<div class="d-flex justify-content-between small text-white border-bottom border-secondary py-1"><span>🎂 ${c.nombre_completo}</span><span class="badge bg-warning text-dark">Día ${dia}</span></div>`;
+      });
+    }
+    htmlMeses += `</div></div></div>`;
+  });
+  gridContainer.innerHTML = htmlMeses;
+  new bootstrap.Modal(document.getElementById('modalAppCumpleanos')).show();
+}
+
+function procesarCumpleanosCongregacion(data) {
+  const hoy = new Date();
+  const anioActual = hoy.getFullYear();
+  const validos = data.filter(r => r.fecha_nacimiento && r.fecha_nacimiento.includes("-"));
+
+  listaCumpleanosOrdenados = validos.map(person => {
+    const parts = person.fecha_nacimiento.split("-");
+    let proximo = new Date(anioActual, parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    if (proximo < new Date(anioActual, hoy.getMonth(), hoy.getDate())) proximo = new Date(anioActual + 1, parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    const diasFaltantes = Math.ceil((proximo - new Date(anioActual, hoy.getMonth(), hoy.getDate())) / (1000 * 60 * 60 * 24));
+    return { ...person, diasFaltantes };
+  }).sort((a, b) => a.diasFaltantes - b.diasFaltantes);
+
+  if (listaCumpleanosOrdenados.length > 0) mostrarCumpleDestacado(0);
+}
+
+function mostrarCumpleDestacado(index) {
+  const persona = listaCumpleanosOrdenados[index];
+  if (!persona) return;
+  const foto = persona.foto_url && persona.foto_url.trim() !== "" ? persona.foto_url : "https://via.placeholder.com/100?text=Foto";
+  const badge = document.getElementById("badgeDiasRestantes");
+
+  badge.textContent = persona.diasFaltantes === 0 ? "🎂 ¡ES HOY!" : `En ${persona.diasFaltantes} días`;
+  document.getElementById("cumpleDestacadoContainer").innerHTML = `
+    <img src="${foto}" class="rounded-circle border border-success shadow" width="75" height="75" style="object-fit: cover;">
+    <div>
+      <h5 class="text-white mb-1 fw-bold">${persona.nombre_completo}</h5>
+      <p class="text-success small mb-0">🎂 Cumpleaños: <b>${persona.fecha_nacimiento}</b></p>
+      <small class="text-white-50">Sección: ${persona.seccion}</small>
     </div>
-  </div>
-
-  <!-- MODAL INTERACTIVO DE CUMPLEAÑOS ANUAL (NUEVO ESTILO APP) -->
-  <div class="modal fade" id="modalAppCumpleanos" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <div class="modal-header border-secondary pb-2">
-          <h5 class="text-success fw-bold">🎈 Calendario Anual de Cumpleaños de la Congregación</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body p-0 pt-3">
-          <div class="app-container-modal p-3" style="max-height: 70vh; overflow-y: auto;">
-            <p class="text-white-50 small text-center mb-3">Organización festiva de todos los cumpleaños registrados en la congregación divididos mes a mes.</p>
-            <div id="gridCalendarioCumpleanosModal" class="row g-3">
-              <!-- Dinámico por JavaScript -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE SIMULACIÓN DE DÍA Y HORA -->
-  <div class="modal fade" id="modalSimulacionTiempo" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-      <div class="modal-content bg-dark text-white border-secondary p-3">
-        <h6 class="text-gold fw-bold mb-3">⚙️ Simular Día y Hora de Visitas</h6>
-        <div class="mb-2">
-          <label class="small text-white-50">Día de la semana</label>
-          <select id="selectSimDia" class="form-select form-select-sm">
-            <option value="1">Lunes</option>
-            <option value="2">Martes</option>
-            <option value="3">Miércoles</option>
-            <option value="4">Jueves</option>
-            <option value="5">Viernes</option>
-            <option value="6">Sábado</option>
-            <option value="7">Domingo</option>
-          </select>
-        </div>
-        <div class="mb-2">
-          <label class="small text-white-50">Hora (0 - 23)</label>
-          <input type="number" id="inputSimHora" class="form-control form-control-sm" min="0" max="23" placeholder="Ej. 16">
-        </div>
-        <div class="mb-3">
-          <label class="small text-white-50">Minutos (0 - 59)</label>
-          <input type="number" id="inputSimMinuto" class="form-control form-control-sm" min="0" max="59" placeholder="Ej. 30">
-        </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-secondary btn-sm w-50" data-bs-dismiss="modal">Cancelar</button>
-          <button class="btn btn-kraft btn-sm w-50" onclick="aplicarSimulacionVisitas()">Aplicar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE DETALLE EXPANDIDO -->
-  <div class="modal fade" id="modalDetalle" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-white border-secondary">
-        <div class="modal-header border-secondary">
-          <h5 class="text-gold fw-bold" id="modalNombreTitulo">Detalle del Registro</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body text-white" id="modalContenidoDetalle"></div>
-        <div class="modal-footer border-secondary">
-          <a id="btnWhatsAppModal" href="#" target="_blank" class="btn btn-success btn-sm">💬 Enviar WhatsApp Rápido</a>
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <footer class="text-center py-4 text-white-50 border-top border-secondary small mt-5" style="background-color: #04060a;">
-    <p class="mb-0">Iglesia Cristiana Manantial de Vida • San Andrés Tuxtla, Veracruz 🕊️</p>
-  </footer>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <script src="admin.js"></script>
-</body>
-</html>
+  `;
+}
