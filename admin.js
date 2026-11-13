@@ -11,9 +11,6 @@ let listaCumpleanosOrdenados = [];
 let registroSeleccionadoActual = null;
 let filtroSeccionActual = "todos";
 
-let fechaSimuladaVisitas = new Date();
-const nombresDias = { 1: 'LUNES', 2: 'MARTES', 3: 'MIÉRCOLES', 4: 'JUEVES', 5: 'VIERNES', 6: 'SÁBADO', 7: 'DOMINGO' };
-
 document.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem("adminLogueado") !== "true") {
     window.location.href = "admin-login.html";
@@ -122,11 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!titulo || !fecha || !hora) return alert("Completa los campos del evento.");
 
       const fechaHoraCompleta = `${fecha}T${hora}:00Z`;
-
-      const existeDuplicado = eventosGlobales.some(e => e.titulo.toLowerCase() === titulo.toLowerCase() && e.fecha_hora === fechaHoraCompleta);
-      if (existeDuplicado) {
-        return alert("⚠️ Este evento ya se encuentra registrado con la misma fecha y hora.");
-      }
 
       try {
         const payload = {
@@ -415,17 +407,18 @@ async function cargarVisitasYEventos() {
     document.getElementById("conteoVisitasHoy").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoVisitasMes").textContent = visitasGlobales.filter(v => v.fecha_hora && v.fecha_hora.split("-")[1] === mesStr).length;
 
-    // Renderizar Visitas pasando solo el ID
+    // Renderizar Visitas con botones funcionales
     let htmlV = "";
     visitasGlobales.forEach(v => {
       htmlV += `
-        <div class="list-group-item bg-dark text-white border-secondary mb-2 rounded p-2 d-flex justify-content-between align-items-center">
-          <div>
-            📍 <b>${v.titulo}</b><br><small class="text-warning">${v.descripcion || ''}</small>
+        <div class="list-group-item bg-dark text-white border-secondary mb-2 rounded p-3 d-flex justify-content-between align-items-center">
+          <div style="max-width: 65%;">
+            📍 <b class="text-warning">${v.titulo}</b><br>
+            <small class="text-white-50">${v.descripcion || ''}</small>
           </div>
-          <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="abrirModalEditarAgenda(${v.id})">✏️</button>
-            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="eliminarItemAgenda(${v.id})">🗑️</button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-warning fw-bold px-2 py-1" onclick="abrirModalEditarAgenda(${v.id})" style="font-size: 12px;">✏️ Editar</button>
+            <button type="button" class="btn btn-sm btn-danger fw-bold px-2 py-1" onclick="eliminarItemAgenda(${v.id})" style="font-size: 12px;">🗑️ Borrar</button>
           </div>
         </div>`;
     });
@@ -434,18 +427,19 @@ async function cargarVisitasYEventos() {
     document.getElementById("conteoEventosHoy").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.startsWith(hoyStr)).length;
     document.getElementById("conteoEventosMes").textContent = eventosGlobales.filter(e => e.fecha_hora && e.fecha_hora.split("-")[1] === mesStr).length;
 
-    // Renderizar Eventos pasando solo el ID
+    // Renderizar Eventos con botones funcionales
     let htmlE = "";
     eventosGlobales.forEach(e => {
       const fechaLimpia = e.fecha_hora ? e.fecha_hora.replace('T', ' ').substring(0, 16) : '';
       htmlE += `
-        <div class="list-group-item bg-dark text-white border-secondary mb-2 rounded p-2 d-flex justify-content-between align-items-center">
-          <div>
-            📖 <b>${e.titulo}</b><br><small class="text-info">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small>
+        <div class="list-group-item bg-dark text-white border-secondary mb-2 rounded p-3 d-flex justify-content-between align-items-center">
+          <div style="max-width: 65%;">
+            📖 <b class="text-info">${e.titulo}</b><br>
+            <small class="text-white-50">📅 ${fechaLimpia} hrs • ${e.descripcion || ''}</small>
           </div>
-          <div class="d-flex gap-1">
-            <button class="btn btn-sm btn-outline-warning py-0 px-2" onclick="abrirModalEditarAgenda(${e.id})">✏️</button>
-            <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="eliminarItemAgenda(${e.id})">🗑️</button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-warning fw-bold px-2 py-1" onclick="abrirModalEditarAgenda(${e.id})" style="font-size: 12px;">✏️ Editar</button>
+            <button type="button" class="btn btn-sm btn-danger fw-bold px-2 py-1" onclick="eliminarItemAgenda(${e.id})" style="font-size: 12px;">🗑️ Borrar</button>
           </div>
         </div>`;
     });
@@ -456,8 +450,11 @@ async function cargarVisitasYEventos() {
 }
 
 function abrirModalEditarAgenda(id) {
-  const item = agendaCompletaGlobal.find(i => i.id === id);
-  if (!item) return;
+  const item = agendaCompletaGlobal.find(i => Number(i.id) === Number(id));
+  if (!item) {
+    alert("No se encontró el registro en la memoria.");
+    return;
+  }
 
   document.getElementById("editAgendaId").value = item.id;
   document.getElementById("editAgendaTipo").value = item.tipo || 'EventoPastor';
@@ -472,7 +469,8 @@ function abrirModalEditarAgenda(id) {
 
   document.getElementById("editAgendaDescripcion").value = item.descripcion || '';
 
-  const modal = new bootstrap.Modal(document.getElementById("modalEdicionAgenda"));
+  const modalEl = document.getElementById("modalEdicionAgenda");
+  const modal = new bootstrap.Modal(modalEl);
   modal.show();
 }
 
